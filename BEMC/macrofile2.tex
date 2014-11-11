@@ -1,0 +1,123 @@
+%% ----------------------------------------------------------------------
+%% Definitions, Macros, Etc.
+%% ----------------------------------------------------------------------
+
+%% Hyper-linked References
+\newcommand{\Sec}[1]{\hyperref[sec:#1]{\S\ref*{sec:#1}}} %section
+\newcommand{\Eqn}[1]{\hyperref[eq:#1]{(\ref*{eq:#1})}} %equation
+\newcommand{\Fig}[1]{\hyperref[fig:#1]{Figure~\ref*{fig:#1}}} %figure
+\newcommand{\Tab}[1]{\hyperref[tab:#1]{Table~\ref*{tab:#1}}} %table
+\newcommand{\Thm}[1]{\hyperref[thm:#1]{Theorem~\ref*{thm:#1}}} %theorem
+\newcommand{\Lem}[1]{\hyperref[lem:#1]{Lemma~\ref*{lem:#1}}} %lemma
+\newcommand{\Prop}[1]{\hyperref[prop:#1]{Property~\ref*{prop:#1}}} %property
+\newcommand{\Cor}[1]{\hyperref[cor:#1]{Corollary~\ref*{cor:#1}}} %corollary
+\newcommand{\Def}[1]{\hyperref[def:#1]{Definition~\ref*{def:#1}}} %definition
+\newcommand{\Alg}[1]{\hyperref[alg:#1]{Algorithm~\ref*{alg:#1}}} %algorithm
+\newcommand{\Ex}[1]{\hyperref[ex:#1]{Example~\ref*{ex:#1}}} %example
+
+% Theorem-like constructs
+%\newtheorem{example}[theorem]{Example}
+
+% Blackboard fonts
+\newcommand{\Real}{\mathbb{R}}
+
+%% Transposes
+\newcommand{\Tra}{^{\rm T}} % Transpose
+\newcommand{\Cct}{^\dagger} % Complex conjugate transpose
+
+%% Permutation index
+\newcommand{\bfpp}{{\bf p}_n}
+
+%% Matrix & Tensor Operations
+\newcommand{\Circ}[1]{{\rm circ}\left( #1 \right)}
+\newcommand{\Fold}[1]{{\rm fold}\left( #1 \right)}
+%\newcommand{\fold}{{\rm fold}
+\newcommand{\Unfold}[1]{{\rm unfold}\left( #1 \right)}
+%\newcommand{\unfold}{{\rm unfold}
+\newcommand{\Twist}[1]{{\rm twist}(\M{#1})}
+\newcommand{\twist}{\rm twist}
+\newcommand{\Squeeze}[1]{{\rm squeeze}(#1)}
+\newcommand{\squeeze}{{\rm squeeze}}
+\newcommand{\Mout}{\diamondsuit}
+\newcommand{\circu}{ {\rm circ}}
+\newcommand{\bcirc}{ {\rm bcirc}}
+\newcommand{\vvec}{ {\rm vec}}
+
+%% Element of complicated object that is surrounded by parens
+\newcommand{\PE}[2]{\left( #1 \right)_{#2}}
+
+%% Vector notation
+\newcommand{\V}[1]{{\bm{\mathbf{\MakeLowercase{#1}}}}} % vector
+\newcommand{\VE}[2]{\MakeLowercase{#1}_{#2}} % vector element
+
+%% Matrix notation
+\newcommand{\M}[1]{{\bm{\mathbf{\MakeUppercase{#1}}}}} % matrix
+\newcommand{\Mhat}[1]{{\bm{\hat \mathbf{\MakeUppercase{#1}}}}} % matrix
+\newcommand{\Mbar}[1]{{\bm{\bar \mathbf{\MakeUppercase{#1}}}}} % matrix
+\newcommand{\ME}[2]{\MakeLowercase{#1}_{#2}} % matrix element
+\newcommand{\MC}[2]{\V{#1}_{#2}}
+
+%% Tensor notation
+\newcommand{\T}[1]{\boldsymbol{\mathscr{\MakeUppercase{#1}}}} %tensor
+\newcommand{\TLS}[2]{\M{#1}_{[#2]}} % lateral slice
+\newcommand{\TFS}[2]{\M{#1}_{#2}} % frontal slice
+\newcommand{\TT}[2]{\V{#1}_{#2}} % tube
+\newcommand{\TE}[2]{\MakeLowercase{#1}_{#2}} % tensor element
+%\newcommand{\ormat}[1]{\boldsymbol{\mathscr{\MakeUppercase\overrightarrow{{#1}}}}} %oriented matrix
+\newcommand{\ormat}[1]{\overrightarrow{\mathcal{#1}}} %oriented matrix
+\newcommand{\tube}[1]{\overrightarrow{#1}} %tube
+
+%% Shortcuts
+\newcommand{\TA}{\T{A}}
+\newcommand{\TB}{\T{B}}
+\newcommand{\TS}{\T{S}}
+\newcommand{\TC}{\T{C}}
+\newcommand{\TU}{\T{U}}
+\newcommand{\TV}{\T{V}}
+\newcommand{\TG}{\T{G}}
+
+\newcommand{\Vu}{\V{u}}
+\newcommand{\Vv}{\V{v}}
+\newcommand{\Vq}{\V{q}}
+\newcommand{\Vr}{\V{r}}
+\newcommand{\Vp}{\V{p}}
+\newcommand{\Vd}{\V{d}}
+\newcommand{\Vzz}{\V{z}}
+\newcommand{\Vb}{\V{b}}
+\newcommand{\Vg}{\V{g}}
+\newcommand{\Vh}{\V{h}}
+\newcommand{\MH}{\M{H}}
+\newcommand{\MG}{\M{G}}
+\newcommand{\MA}{\M{A}}
+\newcommand{\MX}{\M{X}}
+\newcommand{\MZ}{\M{Z}}
+\newcommand{\MW}{\M{W}}
+%\newcommand{\TD}{\T{D}}
+
+\newcommand{\SaS}{{\mathcal S}}
+
+\newcommand{\MGC}{\tilde{\MG}}
+
+\newcommand{\Matlab}{{\sc Matlab}\xspace}
+\newcommand{\matlab}{{\sc Matlab}\xspace}
+\newcommand{\qtext}[1]{\quad\text{#1}\quad}
+
+\newcommand{\matvec}{{\tt Vec}}
+\newcommand{\fld}{{\tt Fold}}
+
+\def \bK{\mathbf{K}}
+\def \bF{\mathbf{F}}
+\def \bD{\mathbf{D}}
+\def \bB{\mathbf{B}}
+\def \bA{\mathbf{A}}
+\newcommand{\bDelta}{\boldsymbol{\Delta}}
+
+%\newcommand{\bea}{\left[ \begin{array}}
+%\newcommand{\eea}{ \end{array} \right]} 
+
+\newcommand{\bftheta}{ {\boldsymbol \theta}}
+\newcommand{\bfrho}{ {\boldsymbol \rho}}
+\newcommand{\bfeta}{ {\boldsymbol \eta}}
+\newcommand{\fft}{ \mbox{\tt fft} }
+\newcommand{\ifft}{ \mbox{\tt ifft} }
+

@@ -1,0 +1,88 @@
+
+%%%%%%%%% MASTER -- compiles the 4 sections
+
+\documentclass[11pt,letterpaper]{article}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pagestyle{plain}                                                      %%
+%%%%%%%%%% EXACT 1in MARGINS %%%%%%%                                   %%
+\setlength{\textwidth}{6.5in}     %%                                   %%
+\setlength{\oddsidemargin}{0in}   %% (It is recommended that you       %%
+\setlength{\evensidemargin}{0in}  %%  not change these parameters,     %%
+\setlength{\textheight}{8.5in}    %%  at the risk of having your       %%
+\setlength{\topmargin}{0in}       %%  proposal dismissed on the basis  %%
+\setlength{\headheight}{0in}      %%  of incorrect formatting!!!)      %%
+\setlength{\headsep}{0in}         %%                                   %%
+\setlength{\footskip}{.5in}       %%                                   %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                   %%
+\newcommand{\required}[1]{\section*{\hfil #1\hfil}}                    %%
+\renewcommand{\refname}{\hfil References Cited\hfil}                   %%
+\bibliographystyle{plain}                                              %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%PUT YOUR MACROS HERE
+
+%\includeonly{NSFsumm}
+
+
+\begin{document}
+%%%%%%%%%%%%%% Project Summary max 1 page must include Intellectual Merit and Broader Impact) %%%%%%%%%%%%%%%%%%%
+%\setcounter{page}{1}
+%\include{nsfsumm}% Max 1 page
+
+
+%%%%%%%%%%%%% Project Description max 15 pages (usually) Must include discussion of recent Prior (last 5 years) %%%%%%%%%%%%%%%%%%%
+\setcounter{page}{1}
+\required{A new direction in Markov chain Monte Carlo research}
+%Mathematical modeling is a wildly successful aspect of modern scholarship. In particular, s
+%, 
+Statistical models pervade modern science and engineering. For many models, though, only a few classes of algorithms can make predictions. This proposal concerns one of those classes, Markov chain Monte Carlo (MCMC). It tends to be slow, but it produces accurate estimates of uncertainty where other schemes can only give approximations.
+
+The general scheme of MCMC algorithms is to compute a chain of sample predictions. The algorithm's behavior and output can be viewed as the path of a simulated crawler: at each juncture, the crawler chooses where to travel next. Although the choice is random, it is purposefully biased, and on the whole, the crawler spends extra time in regions where the model assigns high probability. Once the crawler has explored the entire space, reliable inferences can be made. One improvement to MCMC has turned the crawler into a jumper that explores the space more quickly (Hamiltonian Monte Carlo). Another, built for immense data sets, has prototyped a less deliberate crawler, capable of picking its next direction in a fraction of the time by inspecting a random subset of the data (Firefly Monte Carlo). 
+
+In all cases, MCMC schemes have followed the orthodoxy that the crawler must continue until the time spent in each spot reaches equilibrium. There ought to be more efficient strategies. To be briefly technical, if an MCMC algorithm produces a chain $ x_1, x_2, x_3, ...$ of samples, these samples can be viewed as realizations of random variables $X_1, X_2, X_3, ...$ with probability density functions $f_1, f_2, f_3, $ etc. By the Markov property, the first ``M'' in ``MCMC'', each density determines the next. So, there is some unknown function $L$ with $f_i=Lf_{i-1}$; for the equilibrium $f_{eq}$ that we seek, $Lf_{eq}=f_{eq}$. I intend to approximate $L$, then compute $f_{eq}$ from that. My current plan is to pick a length-$B$ list of functions $\{q_i\}_{i=1}^B$ as a basis for the space of distributions. Then, for each new MCMC sampler, I'll estimate a function $\alpha()$ and a matrix $M$ so that $L \approx L_{\alpha}+L_{M}$, where $ (L_{\alpha}f)(x) = \alpha(x)f(x)$ and $(L_{M}f)(x) =  \sum_{i,j=1}^B q_j(x)M_{ij}\int q_i(x)f(x)dx$. The first term mimics the rejection probability--the chance that the crawler will stay put--while the next term tracks movement. It is easy to tell when the sampler rejects and when it doesn't, so we can bump $\alpha$ up or down accordingly. Meanwhile, when the crawler moves, we know it's time to update $L_{M}$. Terms cancel so that $M_{ij}$ is an inner product between $L_{M}q_i$ and $q_j$. So, it can be written as the expectation $E_{L_{M}q_i}[q_j(x)]$. We can sample $x$ from basis function $q_i$, run the sampler to turn it into a sample from $Lq_i$, then evaluate $q_j$. An average of many such samples will converge to the expectation, rendering an estimate for $M_{ij}$. This approximation can also be adapted to Gibbs sampling, a ubiquitous MCMC variant. Because of its mathematical form, I call the scheme Basis Expansion Monte Carlo (BEMC). 
+
+In essence, BEMC will be a virtual ecologist, picking the crawler up and releasing it elsewhere on the landscape to study its migration habits.
+
+This machinery can be built around any MCMC sampler, and I hope it will be widely adopted. As such, the project will initially include conference appearances, a peer-reviewed paper submission, and published code. It will benefit from the many applied MCMC projects at the University of Washington (UW): if my colleagues begin to use BEMC in their research, I can use their feedback to streamline the interface. The goal is to make the switch easy: just download a fully automated package that takes an MCMC sampler and returns inferences. If indeed this new technology works well, it can build a reputation here that will help it spread through the applied statistics community. Once the pieces are in place, BEMC has potential for impact wherever MCMC algorithms appear--and they appear throughout the STEM fields, in hydrology, demography, epidemiology, genomics, computer vision, speech recognition, climate science, and machine translation.
+
+In one concrete example, UW faculty member Adrian Raftery has been working with United Nations (UN) demographers to project populations by country. His models have to assimilate expert recommendations, and they must adapt to incomplete data, unknown variability, and biased sampling. Realistic estimates of uncertainty are key. Raftery uses MCMC methods, and each run lasts for about two days. If we could shorten the run-time to 30 minutes or less, it would allow the UN demographers much more interaction with the model. This is helpful, because few analysts run a complicated model once. In practice, statisticians and scientists need to alter parameters, leave out subsets of data, update old predictions, or modify and test their assumptions.
+
+Like Raftery, Tyler McCormick is a UW professor with a joint appointment between sociology and statistics. He develops models driven by sociological questions, for example measuring how groups influence individual behavior. His area is ripe for fresh ideas, with new data sources (JSTOR citations, Facebook, cell network records) and, as McCormick puts it, methods that are 60 percent of the way to being usable. His models often use MCMC, and sometimes the samplers run slowly enough to jeopardize a project, so he is interested in BEMC for practical reasons.
+
+In another potential application, MCMC has become the dominant method of inference in phylogenetics, the science of species trees. Biologists have built models that mimic species' divergence. Given genetic data from several related organisms, the models use MCMC to yield plausible family trees. In addition to being a fundamental tool of basic research in evolutionary biology, phylogenetic models are economically valuable. In the pharmaceutical industry, they help locate medically valuable compounds within large taxa. In conservation biology, they help allocate resources to preserve biodiversity. In public health, they help establish sources of infection and select flu strains for vaccines. Jan Irvahn, a UW PhD student working in this domain, hopes to expand the capacity of virus-tracking phylogenetic models to accomodate protein sequences and other data beyond the A,T,C, and G of genetics. He has to wait for over a day to run his models, and he is interested in BEMC as a work-around. Raftery's models have around a thousand unknown parameters to estimate, while McCormick's have fewer, and Irvahn's have around five. Together, these cases provide a test bed for BEMC: we can find out where it works or fails, all with real problems. 
+
+In addition to its benefits as a tool of other disciplines, BEMC may open up new lines of research within computational statistics. First, the scheme will produce compact output (a few hundred numbers). This leanness facilitates parallel code, where communication between processors has been a major bottleneck. Second, it raises questions about MCMC algorithms. Are the underlying operators somehow smooth? Can we understand this regularity well enough to improve our approximation scheme or to establish its grounding in theory? Could we eventually select each run of the sampler in order to give us the most information possible? Could we judge MCMC samplers based on the spectral gap observed when approximating them via BEMC?
+
+To recap, BEMC is an idea designed to improve speed of MCMC algorithms. It will be useful in many scientific domains, and I have planned outreach so that it will be used in practice. BEMC raises interesting mathematical questions about analysis of algorithms, and it is a promising way to run Monte Carlo schemes in parallel. Together, these merits--novel mathematical questions, computational advantages, and the potential to alter statistical practice--make the project worthwhile. 
+
+%%%%%%%%%%%%%% References no page limit %%%%%%%%%%%%%%%%%%%
+%\setcounter{page}{1}
+%\include{nsfref}
+%%%%%%%%%%%%%% Biosketch  Max two pages per person%%%%%%%%%%%%%%%%%%%
+%\setcounter{page}{1}
+%\include{nsfbio}
+%%%%%%%%%%%%%% Budget Justification  no more than 3 pages %%%%%%%%%%%%%%%%%%%
+%\setcounter{page}{1}
+%\include{nsfbudget}% 
+%%%%%%%%%%%%%% Facilities Max 1 page %%%%%%%%%%%%%%%%%%%
+%\setcounter{page}{1}
+%\include{nsffacilities}
+%\clearpage
+%\newpage
+%% Supplementary Documents
+%%%%%%%%%%%%%% Data Management 1 page REQUIRED
+%\setcounter{page}{1}
+%\include{nsfdataman}% 
+%%%%%%%%%% Postdoc Mentoring is required if funding requests postdocs MAX 2 pages?
+%\setcounter{page}{1}
+%\include{nsfpdoc}% 
+%%%%%%%%%REU Description if requesting REU - 3 page max
+% \setcounter{page}{1}
+% \include{nsfSREU}%
+
+%\small
+%\bibliography{eric_kernfeld_biblio.bib}
+
+
+\end{document}
