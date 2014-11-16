@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2012.6.30)  15 NOV 2014 09:29
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2012.6.30)  16 NOV 2014 11:09
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -404,13 +404,13 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <6> not available
 
 
 
-{/usr/local/texlive/2012/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+{/usr/local/texlive/2012/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2]
 No file BEMC.bbl.
-[2] (./BEMC.aux) ) 
+[3] (./BEMC.aux) ) 
 Here is how much of TeX's memory you used:
  4434 strings out of 493488
  58686 string characters out of 3141326
- 146618 words of memory out of 3000000
+ 148618 words of memory out of 3000000
  7635 multiletter control sequences out of 15000+200000
  18525 words of font info for 71 fonts, out of 3000000 for 9000
  957 hyphenation exceptions out of 8191
@@ -437,10 +437,10 @@ ve/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive
 /2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/local/texlive/
 2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb></usr/local/texlive/20
 12/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on BEMC.pdf (2 pages, 219534 bytes).
+Output written on BEMC.pdf (3 pages, 223091 bytes).
 PDF statistics:
- 99 PDF objects out of 1000 (max. 8388607)
- 72 compressed objects within 1 object stream
+ 102 PDF objects out of 1000 (max. 8388607)
+ 74 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
