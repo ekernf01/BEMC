@@ -111,12 +111,9 @@ Let us look at this operator in more detail. Going back to the algorithm, the qu
 
 We can sample from a pdf proportional to $D_{1-\alpha}f$ by sampling $z$ from $f(x)$, then running an M-H iteration on $z$ to get $w$ and retaining the sample $z$ if $w \neq z$. We can sample from a pdf proportional to $L_{acc}f$ by doing the same, but retaining $w$ if $w \neq z$. These facts will be useful as we attempt to estimate $L_{acc}$.
 
-Our estimator is parametric, using a fixed set of functions $\{h_i\}_{i=1}^B$ from $\Omega$ to $\mathbb{R}$. We will choose them to be orthogonal with respect to an $L_2$ inner product, i.e. $\int_{\Omega} h_i(x)h_j(x)dx = 0$ when $i \neq j$. For $\Omega=\mathbb{R}^n$, we use Gaussian-weighted Hermite polynomials. Consider also a function $\hat{\alpha} \in \text{span}(\{h_i\}_{i=1}^B)$ and a matrix $M$ in $\mathbb{R}^{B\times B}$.  We will attempt to set things up so that $\hat{\alpha}\approx{\alpha}$ and $L_{acc} \approx \hat{L}_{acc}$, where $ (\hat{L}_{rej}f)(x) = \hat{\alpha}(x)f(x)$ and $(\hat{L}_{acc}f)(x) =\sum_{i,j=1}^B h_i(x)M_{ij}\int h_j(x)f(x)dx$. 
+Our estimator is parametric, using a fixed set of functions $\{h_i\}_{i=1}^B$ from $\Omega$ to $\mathbb{R}$. We will choose them to be orthogonal with respect to an $L_2$ inner product, i.e. $\int_{\Omega} h_i(x)h_j(x)dx = 0$ when $i \neq j$. For $\Omega=\mathbb{R}^n$, we use Gaussian-weighted Hermite polynomials. Consider also a function $\hat{\alpha} \in \text{span}(\{h_i\}_{i=1}^B)$ and a matrix $M$ in $\mathbb{R}^{B\times B}$.  We will attempt to set things up so that $\hat{\alpha}\approx{\alpha}$ and $L_{acc} \approx \hat{L}_{acc}$, where $(\hat{L}_{acc}f)(x) =\sum_{i,j=1}^B h_i(x)M_{ij}\int h_j(x)f(x)dx$. At this point in the narration, $\hat{\alpha}$ and $M$ are unknown--strategies to estimate them follow. Even if they were chosen optimally, $L$ may not take the same form as $\hat{L}_{\alpha}+\hat{L}_{M}$, so the estimate $\hat{\pi}$ may not be correct. Later on, we will return to these concerns.
 
-
-At this point in the narration, $\hat{\alpha}$ and $M$ are unknown--strategies to estimate them follow. Even if they were chosen optimally, $L$ may not take the same form as $\hat{L}_{\alpha}+\hat{L}_{M}$, so the estimate $\pi$ may not be correct. Later on, we will return to these concerns.
-
-For the moment, we need to estimate $M$ and $\hat{\alpha}$. Fortunately, it is easy to tell when the sampler rejects and when it doesn't. Suppose for a moment that we start the sampler at a point $z$ and it takes a single step to $w$. If $w \neq z$, then the sampler has shown less of a tendency to reject starting from $z$, and we label $z$ with a $0$. If $w = z$, we label $z$ with a $1$. Once the sample space is covered in zeroes and ones, there are many probabilistic classifier methods that could give an estimate of $\hat{L}_{rej}$, which at any given point is just the probability of labeling with a one. 
+For the moment, we need to estimate $M$ and $\hat{\alpha}$. Fortunately, it is easy to tell when the sampler rejects and when it doesn't. Suppose for a moment that we start the sampler at a point $z$ and it takes a single step to $w$. If $w \neq z$, then the sampler has shown less of a tendency to reject starting from $z$, and we label $z$ with a $0$. If $w = z$, we label $z$ with a $1$. Once the sample space is covered in zeroes and ones, there are many probabilistic classifier methods that could give an estimate of $\hat{\alpha}$, which at any given point is just the probability of labeling with a one. 
 
 Meanwhile, whenever the sampler moves, we gain information about $L_{acc}$. To make use of it, notice that the orthogonality of the basis functions implies $\int h_i(x)(\hat{L}_{acc}h_j)(x)dx =  M_{ij}$. This can be written as an expectation $M_{ij} = E_{L_{acc}h_j}[h_i]$, which motivates us to sample from $L_{acc}h_j$ and approximate $M_{ij}$ as a sum. All we need to do is follow the procedure from earlier: sample $z$ from $h_j$, run an M-H iteration on $z$ to get $w$, and retain $w$ if $w \neq z$. 
 
@@ -135,7 +132,7 @@ For $b_{out}  = 1:B$\\
 For $n = 1:N$\\
 \Indp
 Draw a sample $z_n$ from $h_{b_{in}}$.\\
-Run the sampler for one round on $z_n$. Call the result $w_n$.\\
+Run the M-H sampler for one round on $z_n$. Call the result $w_n$.\\
 If $z_n = w_n$:\\
 \Indp
 Add $(z_n, 1)$ to $T$.\\
@@ -151,7 +148,12 @@ Train $\alpha$ on $T$.\\
 \end{algorithm}
 
 \subsection{Stage two: computing the steady state}
- Given $\hat{M}$, $\hat{\alpha}$ and an initial state $f_0$, we want to compute $[\hat{L}_{rej}+\hat{L}_{acc}(1-\hat{\alpha})]^P(f_0)$ for some moderately high exponent $P$.
+ Given $\hat{M}$, $\hat{\alpha}$, and an initial state $f_0$, we want to compute $[D_{\hat{\alpha}}+\hat{L}_{acc}]^P(f_0)$ for some moderately high exponent $P$. To simplify the problem, suppose we set $f_0$ to $h_1$, one of the initial $B$ basis functions. Also, suppose that we restrict $\hat{\alpha}$ to a form where for any of our basis functions $h_i$, we can expand $\hat{\alpha}h_i$ as a sum $\sum_{i=1}^B c_i h_i$. Because of the orthogonality, computing $\hat{L}_{acc}(f_0)$ is simple: $\hat{L}_{acc}(f_0) = \sum_{i=1}^B \hat{L}_{acc}(c_i h_i) = \sum_{i=1}^B [\hat{M}c]_i h_i$. The difficulty lies in finding a representation of $[D_{\hat{\alpha}}(f_0)$ in this same basis. The representation cannot be exact, because for example in the polynomial case, its degree would quickly exceed the maximum degree of the basis.
+
+At this point, we will introduce a family of basis functions, the  Hermite functions, and begin to work in specifics. We will at first discuss the scenario where the sample space $\Omega$ is $\mathbf{R}$. %The Hermite polynomials have two commonly used forms; we we use the one called the probabilists' Hermite polynomials, usually denoted $\{He_n\}_{n=0}^{\infty}$. These functions are generated by setting $He_{n+1}=xHe_n-nHe_{n-1}$, with $He_0$ 
+These functions are generated by setting $\phi_{n+1}=\sqrt{\frac{2}{n+1}}\left[x\phi_n-\sqrt{\frac{n}{2}}\phi_{n-1}\right]$, with $\phi_0=\pi^{-\frac{1}{4}}e^{\frac{-x^2}{2}}$ and $\phi_1=\sqrt{2} \pi^{-\frac{1}{4}}xe^{\frac{-x^2}{2}}$. 
+
+%abramowitz and stegun page 775
 
 \subsection{Gibbs sampling variant}
 This approximation can also be adapted to Gibbs sampling, a ubiquitous MCMC variant. 
