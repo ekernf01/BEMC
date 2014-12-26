@@ -1,0 +1,14 @@
+\begin{thebibliography}{1}
+
+\bibitem{Golub:1969:CGQ}
+Golub, G.H., Welsch, J.H.:
+\newblock Calculation of {G}auss quadrature rules.
+\newblock Math. Comp. \textbf{23}(106) (1969)  221--230 Loose microfiche suppl.
+  A1--A10.
+
+\bibitem{Blocker:2014rz}
+Blocker, A.W.:
+\newblock fastGHQuad: Fast Rcpp implementation of Gauss-Hermite quadrature.
+  (2014) R package version 0.2.
+
+\end{thebibliography}
