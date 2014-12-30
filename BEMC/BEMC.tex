@@ -214,32 +214,53 @@ This motivates an economical procedure to compute $c_+$ and $c_-$.
 \begin{algorithm}[h]
 \caption{Computing $c_+$ and $c_-$}
 Input: a set of indices $J_1, ... J_D$ for a basis function on a D-dimensional space.\\
-Initialize $B_{D,0}$ to $\sum_{K-D \text{ even}} \int_{I_{D,J_D-k_D}}  \phi_{J_D}(x_D)$
-Initialize $B_{D,1}$ to $\sum_{K-D \text{ odd}} \int_{I_{D,J_D-k_D}}  \phi_{J_D}(x_D)$
+Initialize $B_{D,0}$ to $\sum_{k_D \text{ even}} \int_{I_{D,J_D-k_D}}  \phi_{J_D}(x_D)$\\
+Initialize $B_{D,1}$ to $\sum_{k_D \text{ odd}} \int_{I_{D,J_D-k_D}}  \phi_{J_D}(x_D)$\\
+For $d$ from $D-1$ to $1$:\\
+\Indp
+For $\gamma$ in $\{0,1\}$:\\
+\Indp
+Compute $A_{\gamma, d} = \sum_{\left(k \text{ mod } 2\right) = \gamma} \int_{I_{1,J_d-k}}\phi_{J_d}(x_d)$\\
+\Indm
+For $\gamma_1$ and $\gamma_2$ in $\{0,1\}^2$:\\
+\Indp
+Compute $B_{d,\gamma_1} =\sum_{ \gamma_2 \in \{0,1\}}  A_{ \gamma_1 - \gamma_2, {d}}
+B_{{d}+1,\gamma_2}$\\
+\Indm
+\Indm
+
+Return $B_{00}$ for $c_+$ and $B_{01}$ for $c_-$. 
 \Indp
 \Indm
 \end{algorithm}
 
-We'll then need to integrate terms of the form $cx^k\exp(\frac{-x^2}{2})$, a task we can rewrite using gamma densities. Below, $Y$ is a Gamma random variable with shape $a = (k+1)/2$ and rate $b=-1/2$; $F_Y$ is its cumulative distribution function (CDF). The variables $x_0$ and $x_1$ are roots of whichever Hermite polynomial we are working with.
-
-\begin{align*}
-\int_{x_0}^{x_1} cx^k\exp(\frac{-x^2}{2})dx 
-& =  \int_{x_0^2}^{x_1^2} \frac{c}{2}y^{(\frac{k-1}{2})}\exp(\frac{-y}{2})dy \\
-& =  \frac{c}{2} \frac{\Gamma(a)}{b^a} \int_{x_0^2}^{x_1^2} \frac{b^a}{\Gamma(a)}y^{(a-1)}\exp(-by)dy \\
-& =  \frac{c}{2} \frac{\Gamma(a)}{b^a} (F_Y(x_1^2)-F_Y(x_1^2))\\
-\end{align*}
-
-Another way to phrase this trick: the square root of a Gamma random variable with the right parameters has a density function proportional to $x^k\exp(\frac{-x^2}{2})$. This is also called the Nakagami distribution, and the \texttt{R} package \texttt{VGAM} has functions \texttt{rnaka()} (for sampling) and \texttt{pnaka()} for evaluating the CDF. To match $x^k\exp(\frac{-x^2}{2})$, the shape parameter should be $(k+1)/2$ and the rate $k+1$. The normalizing constant is $\frac{(\frac{1}{2})^{\frac{k-1}{2}}}{ \Gamma(k+1)}$. 
+We'll then need to integrate terms of the form $x^k\exp(\frac{-x^2}{2})$. , so $\int_{x_1}^{x_2} x^k\exp(\frac{-x^2}{2})$ is $\frac{ \Gamma(k+1)}{(\frac{1}{2})^{\frac{k+1}{2}}}$ times \texttt{pnaka(x$_2$, shape=(k+1)/2, rate=k+1)-pnaka(x$_1$, shape=(k+1)/2, rate=k+1)}. 
 
 \subsection{Sampling}
-The Nakagami distribution is supported only on $\mathbb{R}_+$, so we will need modify our calculations to reflect half the mass onto the negative numbers. We will call this a double Nakagami distribution. Since some multiple of the double Nakagami density dominates $\phi_{J+}$ and $\phi_{J-}$, we can use rejection sampling with a Nakagami($(J+1)/2, J+1$) proposal to draw samples from basis function $\phi_J$. Rather than separately sampling $\phi_{J+}$ and $\phi_{J-}$, we can employ the following trick.
+Seeking to devise a rejection sampling scheme, we need to find some function that parallels a given Hermite function. Fortunately, if $Y$ is a Gamma random variable with shape $a = (k+1)/2$ and rate $b=-1/2$, then its square root has a density function proportional to $x^k\exp(\frac{-x^2}{2})$. This is also called the Nakagami distribution, and the \texttt{R} package \texttt{VGAM} has functions \texttt{rnaka()} (for sampling) and \texttt{pnaka()} for evaluating the cumulative distribution function (CDF). The Nakagami distribution is supported only on $\mathbb{R}_+$, so we will need modify our calculations to reflect half the mass onto the negative numbers. We will call this a double Nakagami distribution. As it turns out, the double Nakagami normalizing constant is $\frac{(\frac{1}{2})^{\frac{k+1}{2}}}{ \Gamma(k+1)}$.
+
+Some multiple of the double Nakagami density dominates $\phi_{J+}$ and $\phi_{J-}$ outside $[-1,1]$, while a multiple of the normal density does the same inside $[-1,1]$. We can use rejection sampling with a mixture of normal and double Nakagami($(J+1)/2, J+1$) proposals to draw samples from basis function $\phi_J$. Rather than separately sampling $\phi_{J+}$ and $\phi_{J-}$, we can employ the following trick. If $f$ is the proposal density, let $\beta$ be $\sup_x |\phi_{J}(x)|/f(x)$. 
 
 \begin{algorithm}[h]
-\caption{Rejection sampling from $\phi_{J}$. Let $h$}
-
+\caption{Rejection sampling from $\phi_{J}$. Here, $f$ is the Nakagami($(J+1)/2, J+1$) density function.} 
+Draw $u_1\sim$ unif($0,1$). \\
+If $u_1>\nu$, draw $x\sim$ Nakagami($(J+1)/2, J+1$).\\
+If $u_1<\nu$, draw $x\sim$ Normal(0,1).\\
+Draw $u_2\sim$ unif($0,1$). \\
+If $u>\beta|\phi_{J}(x)|/f(x)$, reject.\\
+If $u<\beta|\phi_{J}(x)|/f(x)$ and $\phi_{J}(x)>0$, retain $x$ as a sample from $\phi_{J+}$.\\
+If $u<\beta|\phi_{J}(x)|/f(x)$ and $\phi_{J}(x)<0$, retain $x$ as a sample from $\phi_{J-}$.\\
 \Indp
 \Indm
 \end{algorithm}
+
+To compute $\beta$, $\sup_x |\phi_{J}(x)|/f(x)$ is the greater of $\sup_x \phi_{J}(x)/f(x)$ and $-\inf_x \phi_{J}(x)/f(x)$. Either way, we can take derivatives and set them to 0. Below, $f$ is a mixture density with coefficient $\nu$ for the normal component and $1-\nu$ for the double Nakagami($(J+1)/2, J+1$), i.e. $f(x) = (1-\nu)\frac{(\frac{1}{2})^{\frac{k+1}{2}}}{ \Gamma(k+1)} x^k\exp(\frac{-x^2}{2}) + \nu \frac{1}{\sqrt{2\pi}}\exp(\frac{-x^2}{2})$. Then $\frac{df}{dx}$ is $(1-\nu)\frac{(\frac{1}{2})^{\frac{k+1}{2}}}{ \Gamma(k+1)} \left[ kx^{(k-1)}\exp(\frac{-x^2}{2}) -x^{k+1}\exp(\frac{-x^2}{2})  \right] - \nu \frac{1}{\sqrt{2\pi}}x\exp(\frac{-x^2}{2})$.
+
+\begin{align*}
+\frac{d}{dx} \phi_{J}(x)/f(x)&=\frac{d}{dx}\phi_{J}(x)/\\
+\end{align*}
+
+
 
 
  
