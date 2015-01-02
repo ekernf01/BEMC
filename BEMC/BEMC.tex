@@ -252,6 +252,7 @@ Rearranging the last line, we have a recurrence relation for the integrals we ne
 
 \begin{algorithm}[h]
 \caption{Computing $\int_a^b \psi_n(x)dx$}
+If $a=-\infty$ or $b=\infty$, set a flag.
 If $n$ is $0$:\\
 \Indp
 Set $I=\int_a^b \pi^{-\frac{1}{4}}e^{\frac{-x^2}{2}} dx$ by re-scaling output from a built-in normal distribution CDF calculator.\\
@@ -263,47 +264,42 @@ Set $I=\int_a^b \sqrt{2} \pi^{-\frac{1}{4}}xe^{\frac{-x^2}{2}}dx$ by re-scaling 
 If $n>1$:\\
 \Indp
 Follow this routine to compute $I_{n-2}=\int_a^b \psi_{n-2}(x)dx$.\\
-Set $I$ to $(1-\sqrt{\frac{n}{2}})^{-1}\sqrt{\frac{1}{2n}} \left[ \psi_{n-1}(a)-\psi_{n-1}(b) + \sqrt{\frac{n-1}{2}}I_{n-2}\right]$\\
+Set $I$ to $(1-\sqrt{\frac{n}{2}})^{-1}\sqrt{\frac{1}{2n}} \left[ \psi_{n-1}(a)-\psi_{n-1}(b) + \sqrt{\frac{n-1}{2}}I_{n-2}\right]$. If there is a flag set for $a=-\infty$ or $b=\infty$, set $\psi_{n-1}(a)$ or $\psi_{n-1}(b)$ to zero as needed instead of calculating them.\\
 \Indm
 Return I.\\
 \Indp
 \Indm
 \end{algorithm}
-
-
-
-%Fortunately, for related functions known as the probabilists' Hermite polynomials, $\int_{a}^b He_n(x)e^{\frac{-x^2}{2}}dx=-He_{n+1}(x)e^{\frac{-x^2}{2}}$ \cite{hermite_integrate}.
-%terms of the form $x^k\exp(\frac{-x^2}{2})$. , so $\int_{x_1}^{x_2} x^k\exp(\frac{-x^2}{2})$ is $\frac{ \Gamma(k+1)}{(\frac{1}{2})^{\frac{k+1}{2}}}$ times \texttt{pnaka(x$_2$, shape=(k+1)/2, rate=k+1)-pnaka(x$_1$, shape=(k+1)/2, rate=k+1)}. 
+%
+%-----------------Nakagami Material---------------------
+%
+%Fortunately, if $Y$ is a Gamma random variable with shape $a = (k+1)/2$ and rate $b=-1/2$, then its square root has a density function proportional to $x^k\exp(\frac{-x^2}{2})$. This is also called the Nakagami distribution, and the \texttt{R} package \texttt{VGAM} has functions \texttt{rnaka()} (for sampling) and \texttt{pnaka()} for evaluating the cumulative distribution function (CDF). The Nakagami distribution is supported only on $\mathbb{R}_+$, so we will need modify our calculations to reflect half the mass onto the negative numbers. We will call this a double Nakagami distribution. The double Nakagami normalizing constant is $\frac{(\frac{1}{2})^{\frac{k+1}{2}}}{ \Gamma(k+1)}$.
 
 \subsection{Sampling}
-\EMK{This seems inefficient. Now working on a better scheme.}
-Seeking to devise a rejection sampling scheme, we need to find some PDF that roughly parallels each Hermite function. Fortunately, if $Y$ is a Gamma random variable with shape $a = (k+1)/2$ and rate $b=-1/2$, then its square root has a density function proportional to $x^k\exp(\frac{-x^2}{2})$. This is also called the Nakagami distribution, and the \texttt{R} package \texttt{VGAM} has functions \texttt{rnaka()} (for sampling) and \texttt{pnaka()} for evaluating the cumulative distribution function (CDF). The Nakagami distribution is supported only on $\mathbb{R}_+$, so we will need modify our calculations to reflect half the mass onto the negative numbers. We will call this a double Nakagami distribution. The double Nakagami normalizing constant is $\frac{(\frac{1}{2})^{\frac{k+1}{2}}}{ \Gamma(k+1)}$.
 
-Some multiple of the double Nakagami density dominates $\psi_{J+}$ and $\psi_{J-}$ outside $[-1,1]$, while a multiple of the normal density does the same inside $[-1,1]$. We can use rejection sampling with a mixture of normal and double Nakagami($(J+1)/2, J+1$) proposals to draw samples from basis function $\psi_J$. Rather than separately sampling $\psi_{J+}$ and $\psi_{J-}$, we can employ the following trick. If $f$ is the proposal density, let $\beta$ be $\sup_x |\psi_{J}(x)|/f(x)$. 
+\EMK{The Epanechnikov kernel has density $0.75(1−u^2)$, CDF $0.25(2+3u−u^3)$, and inverse CDF $2sin(arcsin(2z-1)/3)$.}
 
 \begin{algorithm}[h]
-\caption{Rejection sampling from $\psi_{J}$. Here, $f$ is the Nakagami($(J+1)/2, J+1$) density function.} 
-Draw $u_1\sim$ unif($0,1$). \\
-If $u_1>\nu$, draw $x\sim$ Nakagami($(J+1)/2, J+1$).\\
-If $u_1<\nu$, draw $x\sim$ Normal(0,1).\\
-Draw $u_2\sim$ unif($0,1$). \\
-If $u>\beta|\psi_{J}(x)|/f(x)$, reject.\\
-If $u<\beta|\psi_{J}(x)|/f(x)$ and $\psi_{J}(x)>0$, retain $x$ as a sample from $\psi_{J+}$.\\
-If $u<\beta|\psi_{J}(x)|/f(x)$ and $\psi_{J}(x)<0$, retain $x$ as a sample from $\psi_{J-}$.\\
+\caption{Rejection sampling from $\psi_{J}$.} 
+On initialization:\\
 \Indp
+Suppose $x_{j}$ is the $j$th root of $\psi_{J}$. Using the convention that $x_{0}=-\infty$ and $x_{J+1}=\infty$, \\
+For $j=1,...J$:\\
+\Indp
+Set $p_j=\int_{x_{j}}^{x_{j+1}}|\psi_{J}(x)|dx/(c_+ + c_-)$.\\
+For $j=1,...J$, 
+\Indp
+\EMK{If it $x_{j}$ to ${x_{j+1}$ is a finite interval, find a quadratic (see note above) and draw proposals from that. If it's infinite, use a shifted exponential or gamma. Need to find $M_j$, the sup on $x_{j}$ to ${x_{j+1}$ of $|\phi_J|/proposal$, and probably need to optimize the proposal parameters.\\
 \Indm
+\Indm
+\Indm
+
+For one sample:\\
+Draw $j$ from $0$, ... , $J$ with probability $p_j$.\\
+Draw $u_1\sim$ unif($0,1$). \\
+
 \end{algorithm}
 
-To compute $\beta$, $\sup_x |\psi_{J}(x)|/f(x)$ is the greater of $\sup_x \psi_{J}(x)/f(x)$ and $-\inf_x \psi_{J}(x)/f(x)$. Either way, we can take derivatives and set them to 0. Below, $f$ is a mixture density with coefficient $\nu$ for the normal component and $1-\nu$ for the double Nakagami($(J+1)/2, J+1$), i.e. $f(x) = (1-\nu)\frac{(\frac{1}{2})^{\frac{k+1}{2}}}{ \Gamma(k+1)} x^k\exp(\frac{-x^2}{2}) + \nu \frac{1}{\sqrt{2\pi}}\exp(\frac{-x^2}{2})$. Then $\frac{df}{dx}$ is $(1-\nu)\frac{(\frac{1}{2})^{\frac{k+1}{2}}}{ \Gamma(k+1)} \left[ kx^{(k-1)}\exp(\frac{-x^2}{2}) -x^{k+1}\exp(\frac{-x^2}{2})  \right] - \nu \frac{1}{\sqrt{2\pi}}x\exp(\frac{-x^2}{2})$.
-
-\begin{align*}
-\frac{d}{dx} \psi_{J}(x)/f(x)&=\frac{f(x)\psi_{J}'(x)-f'(x)\psi_{J}(x)}{f(x)^2}\\
-\end{align*}
-
-
-
-
- 
 
 \section{Proof of Correctness}
 In stage $1$, we will suffer some error while estimating $M$ and $\alpha$ from. The true transition kernel cannot always be represented in the finite-dimensional form we impose, which is a second source of error. In stage two of BEMC-R, we incur a third source, namely that $D_{\hat{\alpha}}(f_0)$ does not necessarily take the form $\sum_{i=1}^B c_i h_i$, especially if $\hat{\alpha}$ is also represented in the same basis. For example, if the basis were Gaussian-weighted polynomials up to degree 15, the degree of $D_{\hat{\alpha}}(f_0)$ would quickly exceed 15, and the variance of the Gaussian would change. 
