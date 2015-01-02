@@ -1,5 +1,10 @@
 \begin{thebibliography}{1}
 
+\bibitem{mathworld_hermite}
+Weisstein, E.W.:
+\newblock Hermite polynomial.
+\newblock From MathWorld--A Wolfram Web Resource. (December 2014)
+
 \bibitem{Golub:1969:CGQ}
 Golub, G.H., Welsch, J.H.:
 \newblock Calculation of {G}auss quadrature rules.
@@ -10,5 +15,10 @@ Golub, G.H., Welsch, J.H.:
 Blocker, A.W.:
 \newblock fastGHQuad: Fast Rcpp implementation of Gauss-Hermite quadrature.
   (2014) R package version 0.2.
+
+\bibitem{Bunck:2009kq}
+Bunck, B.:
+\newblock A fast algorithm for evaluation of normalized hermite functions.
+\newblock Bit Numer Math \textbf{49}(2) (2009)  281--295
 
 \end{thebibliography}
