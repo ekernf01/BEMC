@@ -70,7 +70,7 @@
 \maketitle
 
 \begin{abstract}
-We introduce Basis Expansion Monte Carlo, which studies a Gibbs or Metropolis-Hastings sampler to infer the underlying transition kernel. To make inference about the steady state, we compute the steady-state of the approximate kernel. Results show ...
+We introduce Basis Expansion Monte Carlo, which studies a Gibbs or Metropolis-Hastings sampler to infer the underlying transition kernel. To make inference about the steady state, which is usually the item of interest in a sampler, we compute the steady-state of the approximate kernel. Results show ...
 \end{abstract}
 
 
@@ -81,7 +81,7 @@ More and references about history, background, and/or tutorials on monte carlo m
 
 
 
-One popular method, the Metropolis-Hastings scheme consists of the following procedure.
+One popular method, the Metropolis-Hastings scheme, consists of the following procedure.
 
 \begin{algorithm}[h]
 \caption{Metropolis-Hastings algorithm}
@@ -95,7 +95,7 @@ Draw $u$ from a uniform density on $[0,1]$.
 Set $x_i = x$ with probability $1 - \alpha$, i.e. if $u >\alpha$, and $x_i = x_{i-1}$ otherwise.\\
 \end{algorithm}
 
-Suppose this MCMC algorithm produces a chain $ x_1, x_2, x_3, ...$ of samples. Because the algorithm is stochastic, these samples can be viewed as realizations of random variables $X_1, X_2, X_3, ...$ with marginal density functions $f_1, f_2, f_3, $ etc. If you initialize deterministically, then $X_1$ is just a constant. Because $X_i$ is independent of past draws given $X_{i-1}$, we can write $f_i(x_i) = \int f_{i|i-1}(x_{i},x_{i-1})f_{i-1}(x_{i-1})dx_{i-1}$ using the conditional density of $X_i$ given $X_{i-1}$. Noting that $f_{i|i-1}$ doesn't depend on $i$, we can replace it with a function $K$ so that $f_i(x_i) = \int K(x_i, x_{i-1})f_{i-1}(x_{i-1})dx_{i-1}$. This function $K$, called the Markov kernel, is analogous to the transition probability matrices of discrete-space Markov chain theory. We refer to the linear operator of integrating against $K$ as $L$, so that $f_{i} = Lf_{i-1}$. The object of interest is the steady state of this operator, an eigenfunction $\pi$ that has eigenvalue $1$ so that for any $x$, $\pi(x) = \int K(x, t)\pi(t)dt$. In MCMC methods, chains are usually left to run until the Markov chain reaches its steady state. In BEMC, we approximate $L$, then compute $\pi$ from the approximation. 
+Suppose this MCMC algorithm produces a chain $ x_1, x_2, x_3, ...$ of samples. Because the algorithm is stochastic, these samples can be viewed as realizations of random variables $X_1, X_2, X_3, ...$ with marginal density functions $f_1, f_2, f_3, $ etc. If you initialize deterministically, then $X_1$ is just a constant. Because $X_i$ is independent of past draws given $X_{i-1}$, we can write $f_i(x_i) = \int f_{i|i-1}(x_{i},x_{i-1})f_{i-1}(x_{i-1})dx_{i-1}$ using the conditional density of $X_i$ given $X_{i-1}$. Noting that $f_{i|i-1}$ doesn't depend on $i$, we can replace it with a function $K$ so that $f_i(x_i) = \int K(x_i, x_{i-1})f_{i-1}(x_{i-1})dx_{i-1}$. This function $K$, called the Markov kernel, is analogous to the transition probability matrices of discrete-space Markov chain theory. We refer to the linear operator of integrating against $K$ as $L$, so that $f_{i} = Lf_{i-1}$. The object of interest is the steady state of this operator, an eigenfunction $\pi$ that has eigenvalue $1$ so that for any $x$, $\pi(x) = (L\pi)(x) = \int K(x, t)\pi(t)dt$. In MCMC methods, chains are usually left to run until the Markov chain reaches its steady state. By contrast, in BEMC, we approximate $L$ by methods that allow the chain to run briefly from many different places, and we compute $\pi$ from the approximation. 
 
 \subsection{Stage one: approximating the kernel}
 \label{sec:BEMC}
@@ -289,7 +289,7 @@ For $j=1,...J$:\\
 Set $p_j=\int_{x_{j}}^{x_{j+1}}|\psi_{J}(x)|dx/(c_+ + c_-)$.\\
 For $j=1,...J$, 
 \Indp
-\EMK{If it $x_{j}$ to ${x_{j+1}$ is a finite interval, find a quadratic (see note above) and draw proposals from that. If it's infinite, use a shifted exponential or gamma. Need to find $M_j$, the sup on $x_{j}$ to ${x_{j+1}$ of $|\phi_J|/proposal$, and probably need to optimize the proposal parameters.\\
+\EMK{If it $x_{j}$ to $x_{j+1}$ is a finite interval, find a quadratic (see note above) and draw proposals from that. If it's infinite, use a shifted exponential or gamma. Need to find $M_j$, the sup on $x_{j}$ to $x_{j+1}$ of $|\phi_J|/proposal$, and probably need to optimize the proposal parameters.\\}
 \Indm
 \Indm
 \Indm
