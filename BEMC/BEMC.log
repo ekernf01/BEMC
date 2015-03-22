@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2012.6.30)  21 MAR 2015 16:47
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2012.6.30)  21 MAR 2015 17:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -271,7 +271,7 @@ Package color Info: Driver file: pdftex.def on input line 130.
 Package color Info: Redefining color blue on input line 55.
 Package color Info: Redefining color red on input line 56.
 
-No file BEMC.aux.
+(./BEMC.aux)
 \openout1 = `BEMC.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 62.
@@ -286,7 +286,7 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 62.
 LaTeX Font Info:    ... okay on input line 62.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 62.
 LaTeX Font Info:    ... okay on input line 62.
-(/usr/local/texlive/2012/texmf-dist/tex/context/base/supp-pdf.mkii
+ (/usr/local/texlive/2012/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count111
 \scratchdimen=\dimen128
@@ -404,40 +404,14 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <6> not available
 
 
 
-{/usr/local/texlive/2012/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-
-LaTeX Warning: Reference `sec:BEMC-R' on page 2 undefined on input line 104.
-
-
-LaTeX Warning: Reference `sec:BEMC' on page 2 undefined on input line 137.
-
-[2] [3]
-
-LaTeX Warning: Citation `mathworld_hermite' on page 4 undefined on input line 1
-85.
-
-
-LaTeX Warning: Citation `mathworld_hermite' on page 4 undefined on input line 1
-85.
-
-
-LaTeX Warning: Citation `Golub:1969:CGQ' on page 4 undefined on input line 192.
-
-
-
-LaTeX Warning: Citation `Blocker:2014rz' on page 4 undefined on input line 192.
-
-
-[4]
-Overfull \hbox (43.56395pt too wide) in paragraph at lines 210--210
+{/usr/local/texlive/2012/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] [3]
+ [4]
+Overfull \hbox (43.56395pt too wide) in paragraph at lines 207--207
 [] 
  []
 
 
-LaTeX Warning: Citation `Bunck:2009kq' on page 5 undefined on input line 236.
-
-
-Overfull \hbox (40.49611pt too wide) in paragraph at lines 246--246
+Overfull \hbox (40.49611pt too wide) in paragraph at lines 243--243
 [] 
  []
 
@@ -449,7 +423,7 @@ Missing character: There is no â in font cmr10!
 Missing character: There is no ˆ in font cmr10!
 Missing character: There is no ’ in font cmr10!
 
-Overfull \hbox (0.9304pt too wide) in paragraph at lines 280--281
+Overfull \hbox (0.9304pt too wide) in paragraph at lines 277--278
 []\OT1/cmr/m/n/10 EMK: The Epanech-nikov ker-nel has den-sity $0\OML/cmm/m/it/1
 0 :\OT1/cmr/m/n/10 75(1\OML/cmm/m/it/10 u[]\OT1/cmr/m/n/10 )$, CDF $0\OML/cmm/m
 /it/10 :\OT1/cmr/m/n/10 25(2 + 3\OML/cmm/m/it/10 uu[]\OT1/cmr/m/n/10 )$, and in
@@ -460,49 +434,42 @@ mr/m/n/10 (2\OML/cmm/m/it/10 z \OMS/cmsy/m/n/10 ^^@
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[6] (./BEMC.bbl) [7] (./BEMC.aux)
-
-LaTeX Warning: There were undefined references.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
- ) 
+[6] (./BEMC.bbl) [7] (./BEMC.aux) ) 
 Here is how much of TeX's memory you used:
- 4443 strings out of 493488
- 58806 string characters out of 3141326
- 152618 words of memory out of 3000000
+ 4445 strings out of 493488
+ 58824 string characters out of 3141326
+ 151660 words of memory out of 3000000
  7643 multiletter control sequences out of 15000+200000
  18693 words of font info for 72 fonts, out of 3000000 for 9000
  957 hyphenation exceptions out of 8191
  38i,13n,32p,1346b,395s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
-></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb>
-</usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.pfb></
-usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9.pfb></us
-r/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr
-/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmex7.pfb></
-usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></u
-sr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></us
-r/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/
-local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/lo
-cal/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/loca
-l/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/
-texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/te
-xlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texli
-ve/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/
-2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/201
-2/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/local/texlive/2012/t
-exmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2012/te
-xmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb></usr/local/texlive/2012/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2012/texmf-
-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2012/texmf-di
-st/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2012/texmf-dist
-/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/local/texlive/2012/texmf-dist/
-fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texlive/2012/texmf-dist/f
-onts/type1/public/amsfonts/cm/cmtt8.pfb></usr/local/texlive/2012/texmf-dist/fon
-ts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on BEMC.pdf (7 pages, 294030 bytes).
+</usr/local/texlive/2012/texmf-dist/fonts/ty
+pe1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2012/texmf-dist/fonts/typ
+e1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2012/texmf-dist/fonts/type
+1/public/amsfonts/cm/cmbx7.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/
+public/amsfonts/cm/cmbx9.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmex10.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/pub
+lic/amsfonts/cmextra/cmex7.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/
+public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/p
+ublic/amsfonts/cm/cmmi12.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmmi5.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/publ
+ic/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public
+/amsfonts/cm/cmr10.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/a
+msfonts/cm/cmr12.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/ams
+fonts/cm/cmr17.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmr5.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts
+/cm/cmr7.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm
+/cmr8.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cm
+r9.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy1
+0.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.
+pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pf
+b></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
+</usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></
+usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></u
+sr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></us
+r/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb></usr/
+local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on BEMC.pdf (7 pages, 293029 bytes).
 PDF statistics:
  132 PDF objects out of 1000 (max. 8388607)
  96 compressed objects within 1 object stream
