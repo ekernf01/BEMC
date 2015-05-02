@@ -70,7 +70,7 @@
 \maketitle
 
 \begin{abstract}
-We introduce Basis Expansion Monte Carlo, which studies a Gibbs or Metropolis-Hastings sampler to infer the underlying transition kernel. To make inference about the steady state, which is usually the item of interest in a sampler, we compute the steady-state of the approximate kernel. Results show ...
+We introduce Basis Expansion Monte Carlo, which studies a Gibbs or Metropolis-Hastings sampler to infer the underlying transition kernel. To make inference about the steady state, which is usually the item of interest in a sampler, we compute the steady-state of the approximate kernel. We reduce this to an eigenvector calculation. Results show ...
 \end{abstract}
 
 
@@ -265,33 +265,135 @@ Train on $T$ to get $\hat{\alpha}$, represented by $\hat{r}$ \EMK{ Possibility h
 
 For one further refinement, we could include some prior information about $M$. Since $L_{acc}$ mimics the action of the sampler as it moves, it might resemble the action of the proposal alone, with no rejections. That would mean $\hat{g}_{ij} \approx \int h_i(x)q(x|y)h_j(y)dydx$. For simple proposal distributions like a uniform or normal centered on the current value, this integral may be easy to find as a convolution.
 
-\subsection{A concrete choice of basis for BEMC-R}
-\label{sec: BEMC-R_concrete}
-
-We can implement this rejection-tolerant version on $\mathbb{R}^D$ using a list of Gaussians for $\{h_i\}_{i=1}^B$ like in section \ref{sec: BEMC_concrete}. In selecting $\{\phi_i\}_{i=1}^{B_\phi}$, we want to make it easy to compute inner products of the form $\int \phi_k(x)h_i(x)h_j(x)dx$. We also want something appropriate to express $\alpha$ as it occurs naturally. These requirement suggest using constants, Gaussians, or \EMK{if all else fails} Hermite polynomials. \EMK{ugh what a mess that will be}. \EMK{Can we do those integrals if we include a link function? Maybe a probit link would allow crafty integration by parts??}
-
 \subsection{Computing the steady state in BEMC-R}
 \label{BEMC-R-target}
 
 
-In BEMC as presented in section \ref{sec:BEMC}, there was nothing to gain by representing our estimate $\hat{\pi}$ of the target outside of the span of $\{h_i\}_{i=1}^B$: any component orthogonal to $\text{span}\{h_i\}_{i=1}^B$ would get zeroed out upon a single application of $\hat{L}$. This is no longer the case; because of the diagonal term $D_{rej}$, we have no guarantee that our approximation stay within any particular finite-dimensional subspace. We still need to represent $\hat{\pi}$ in computer memory, so for now, we'll sweep the issue under the rug and consider only approximations that we can write as $\hat{\pi}(x) = \sum_{i=1}^{B}v_{i}h_i(x)$. Our final approximation to the transition kernel will be $$ P_{\text{span}\{h_i\}}(\hat{D}_{rej} + 
+In BEMC as presented in section \ref{sec:BEMC}, there was nothing to gain by representing our estimate $\hat{\pi}$ of the target outside of the span of $\{h_i\}_{i=1}^B$: any component orthogonal to $\text{span}\{h_i\}_{i=1}^B$ would get zeroed out upon a single application of $\hat{L}$. This is no longer the case; because of the diagonal term $D_{rej}$, we have no guarantee that our approximation stay within any particular finite-dimensional subspace. We still need to represent $\hat{\pi}$ in computer memory, so for now, we'll sweep the issue under the rug and consider only approximations that we can write as $\hat{\pi}(x) = \sum_{i=1}^{B}v_{i}h_i(x)$. Our final approximation to the transition kernel will be $$ (P_{\text{span}\{h_i\}}\hat{D}_{rej} + 
 \hat{L}_{acc}),$$ where $P_{\text{span}\{h_i\}}$ is the orthogonal projector onto the set of functions expressible as $\sum_{i=1}^{B}v_{i}h_i(x)$.
 
-We define matrices $C^{(k)}$ so that $c_{ij}^{(k)}=\int \phi_k(x)h_i(x)h_j(x)dx$. The projector $P_{\text{span}\{h_i\}}$ can be written \EMK{fill this in later. going biking.}
+To simplify notation, let $\psi_{\tau(\ell, i)}\equiv\phi_\ell h_i$ for some bijective $\tau()$. In this paragraph, $k$ or $\ell$ are outputs from $\tau$ while $i$ and $j$ are inputs or plain indices. We drop this division later when three indices of one ``type'' are needed. We define matrices $D$ so that $d_{jk}=\int \psi_k(x)h_j(x)dx$ and $E$ so that $e_{k, \ell}=\int \psi_k(x)\psi_\ell(x)dx$. So, $D$ is rectangular, and $E$ is square and bigger than $C$. The product $CDE$ makes sense. The projector $P_{\text{span}\{h_i\}}$ takes the form of a matrix $Q$ of the same size as $D$. This matrix multiplies coefficients $v_{k}$, which we take from a function represented as $\sum_{ k}v_{k} \psi_k(x)$, and produces coefficients $w_{i}$ to minimize the $\mathcal{L}_2$ residual $\int(\sum_{k}v_{k} \psi_k(x) - \sum_{i} w_i h_i(x))^2$. Distributing the sum and moving the integral inside, that becomes 
+\begin{align*}
+\int(\sum_{k}v_{k} \psi_k(x) - \sum_{i} w_i h_i(x))^2 &=\int \sum_{k}v_{k} \psi_k(x)\sum_{\ell}v_{\ell} \psi_\ell(x) - 2\sum_{k}v_{k} \psi_k(x) \sum_{i} w_i h_i(x) + \sum_{i} w_i h_i(x) \sum_{j} w_j h_j(x) \\
+&= \sum_{k,\ell}v_{k} v_{\ell} e_{kl} - 2\sum_{k,i} w_i v_{k} d_{ik} + \sum_{i}  \sum_{j}w_i w_j c_{ij}  \\
+&= v^TEv - 2v^TDw + w^TCw  .
+\end{align*}
+
+Setting the gradient to zero yields
+\begin{align*}
+&0= -2v^TD + 2w^TC\\
+\implies& D^Tv = C^Tw\\ \
+\implies& C^{-1}D^Tv = w.
+\end{align*}
 
 \EMK{ also considered $\hat{\pi}(x) = \sum_{i,k=1}^{B,B_\phi}v_{ik}\phi_k(x)h_i(x)$.This would require ``full-house'' integrals with three $\phi$ terms and two $h$ terms. Since we will choose $\phi_1$ to be constant, this form is at least as expressive as its rejection-neglecting predecessor. Could also choose yet another basis for this, but it would have to play nice with the $\phi$'s and $h$'s anyway.}
 
  Given ${M}$ and $\hat{r}$, we follow the same tactic as in section \ref{BEMC-target}. 
 
 \begin{align*}
-\sum_{\ell,k=1}^{B,B_\phi}v_{\ell k}\phi_k(x)h_\ell(x)&=\hat{\pi}(x) \\
-&=(P_{\text{span}\{h_i\}}(\hat{D}_{rej} + 
-\hat{L}_{acc})\hat{\pi})(x) \\
-&=  P_{\text{span}\{h_i\}}\sum_{i=1}^{B_\phi} \phi_i(x) \sum_{\ell}^{B}v_{\ell}h_\ell(x) + 
-\int \sum_{i,j=1}^B M_{ij} h_i(x)h_j(y) \sum_{\ell=1}^{B}v_{\ell}h_\ell(y)dy\\
-&=  P_{\text{span}\{h_i\}}\sum_{i=1}^{B_\phi} \phi_i(x) \sum_{\ell}^{B}v_{\ell}h_\ell(x) + 
- \sum_{i,j=1}^B M_{ij} h_i(x) \sum_{\ell=1}^{B}v_{\ell }\int h_j(y)h_\ell(y)dy\\
+\sum_{i}^{B}w_{i}h_i(x)&=\hat{\pi}(x) \\
+&=((P_{\text{span}\{h_i\}}\hat{D}_{rej} + 
+\hat{L}_{acc})\hat{\pi})(x) 
+\\
+&=  P_{\text{span}\{h_i\}}\left\{\sum_{i=1}^{B_\phi} \phi_i(x) \sum_{\ell}^{B}w_{\ell}h_\ell(x)\right\} + 
+\int \sum_{i,j=1}^B M_{ij} h_i(x)h_j(y) \sum_{\ell=1}^{B}w_{\ell}h_\ell(y)dy
+\\
+&=  P_{\text{span}\{h_i\}}\left\{\sum_{i=1}^{B_\phi} \phi_i(x) \sum_{\ell}^{B}w_{\ell}h_\ell(x)\right\} + 
+ \sum_{i,j, \ell=1}^B M_{ij} h_i(x)c_{j\ell}w_{\ell}
+\\
+&=  P_{\text{span}\{h_i\}}\left\{\sum_{i=1}^{B_\phi} \sum_{j}^{B}w_{j} \psi_{\tau(i,j)}\right\}+ 
+ \sum_{i=1}^B h_i(x)(MCw)_{i}\\
 \end{align*}
+
+Since we now know we can apply $ P_{\text{span}\{h_i\}}$ by calculating $C^{-1}D^Tv$, we can express the entire process as a matrix multiplication with just one more definition. Let $A$ have $A_{kj}=1$ if for some $\ell$, $k=\tau(\ell, j)$ and $A_{kj}=0$ otherwise. Then by our definition, the coefficients for $\hat{\pi}$ in terms of $\{h_i\}$ come from the eigenvector $w = (C^{-1}D^TA + MC)w$.
+
+\subsection{A concrete choice of basis for BEMC-R}
+\label{sec: BEMC-R_concrete}
+
+We can implement this rejection-tolerant version on $\mathbb{R}^D$ using a list of Gaussians for $\{h_i\}_{i=1}^B$ like in section \ref{sec: BEMC_concrete}. In selecting $\{\phi_i\}_{i=1}^{B_\phi}$, we want to make it easy to compute inner products of the form $\int \phi_k(x)h_i(x)h_j(x)dx$. We also want something appropriate to express $\alpha$ as it occurs naturally. These requirement suggest using constants and Gaussians. We suggest one additional change: if $\Phi$ is the cumulative distribution function of the standard normal, and $f_D(\cdot|\mu, \Sigma)$ is a normal density on $R^D$, then for any pair of our basis functions, $\int \Phi(\theta ^T x)h_i(x)h_j(x)dx$ can be calculated as follows. First, simplify $h_i(x)h_j(x)$ into a single normal density. Below, the basis functions $i$ and $j$ have precision matrices $\Lambda_i$ and $\Lambda_j$, with $\Lambda_{ij}\equiv \Lambda_i+\Lambda_j$ and $\mu_{ij}\equiv \Lambda_{ij}^{-1}(\Lambda_i\mu_i+\Lambda_j\mu_j)$.
+\begin{align*}
+h_i(x)h_j(x) 
+&=\frac{1}{(2\pi)^{n/2}|\Sigma_i|}
+\frac{1}{(2\pi)^{n/2}|\Sigma_j|}
+\exp(\frac{-(x-\mu_i)^T\Sigma_i^{-1}(x-\mu_i)}{2})
+\exp(\frac{-(x-\mu_j)^T\Sigma_j^{-1}(x-\mu_j)}{2})\\
+&=\frac{1}{(2\pi)^{n/2}|\Sigma_i|}
+\frac{1}{(2\pi)^{n/2}|\Sigma_j|}
+\exp(\frac{-(x-\mu_i)^T\Lambda_i(x-\mu_i)}{2}-\frac{(x-\mu_j)^T\Lambda_j(x-\mu_j)}{2})\\
+&=\frac{1}{(2\pi)^{n/2}|\Sigma_i|}
+\frac{1}{(2\pi)^{n/2}|\Sigma_j|}
+\exp(\frac{-x^T\Lambda_ix+2x^T\Lambda_i\mu_i-\mu_i^T\Lambda_i\mu_i}{2}-\frac{-x^T\Lambda_jx+2x^T\Lambda_j\mu_j-\mu_j^T\Lambda_j\mu_j}{2})\\
+&=\frac{1}{(2\pi)^{n/2}|\Sigma_i|}
+\frac{1}{(2\pi)^{n/2}|\Sigma_j|}
+\exp(\frac{-x^T(\Lambda_i+\Lambda_j)x
++2x^T(\Lambda_i\mu_i+\Lambda_j\mu_j)
+-\mu_i^T\Lambda_i\mu_i-\mu_j^T\Lambda_j\mu_j}{2})\\
+&=\frac{(2\pi)^{n/2}|\Sigma_{ij}|}{(2\pi)^{n/2}|\Sigma_i|(2\pi)^{n/2}|\Sigma_j|}
+\frac{1}{(2\pi)^{n/2}|\Sigma_{ij}|}
+\exp(\frac{
+	-x^T(\Lambda_{ij})x 
+	+2x^T\Lambda_{ij}\mu_{ij}
+	-\mu_{ij}^T\Lambda_{ij}\mu_{ij}
+	+\mu_{ij}^T\Lambda_{ij}\mu_{ij}
+	-\mu_i^T\Lambda_i\mu_i-\mu_j^T\Lambda_j\mu_j
+}{2})\\
+&=\frac{(2\pi)^{n/2}|\Sigma_{ij}|}{(2\pi)^{n/2}|\Sigma_i|(2\pi)^{n/2}|\Sigma_j|}
+ f_D(x|\mu_{ij}, \Sigma_{ij})
+\exp(\frac{
+	\mu_{ij}^T\Lambda_{ij}\mu_{ij}
+	-\mu_i^T\Lambda_i\mu_i-\mu_j^T\Lambda_j\mu_j
+}{2})\\
+&\equiv \kappa_{ij} f_D(x|\mu_{ij}, \Sigma_{ij})\\
+\end{align*}
+
+Then, defining a constant 
+$$
+\kappa_{ij} \equiv \frac{(2\pi)^{n/2}|\Sigma_{ij}|}{(2\pi)^{n/2}|\Sigma_i|(2\pi)^{n/2}|\Sigma_j|}
+\exp(\frac{
+	\mu_{ij}^T\Lambda_{ij}\mu_{ij}
+	-\mu_i^T\Lambda_i\mu_i-\mu_j^T\Lambda_j\mu_j
+}{2})
+,$$
+ the integral follows. Define $U_{\theta}$ to be an orthogonal matrix so that $\theta^T U_{\theta}$ is $(\|\theta\|, 0, 0, ...,0 )$, i.e. so that the first column is a multiple of $\theta$, and define $u \equiv U_{\theta}^Tx$. 
+\begin{align*}
+\int \Phi(\theta ^T x)h_i(x)h_j(x)dx &=
+\kappa_{ij} \int \Phi(\theta ^T x)  f_D(x|\mu_{ij}, \Sigma_{ij})dx\\
+&=
+\kappa_{ij} \int \Phi(\theta ^T U_{\theta}u) f_D(U_{\theta}u|\mu_{ij}, \Sigma_{ij})du\\
+&=
+\kappa_{ij} \int \Phi(\|\theta\|u_1) f_D(u|U_{\theta}^T\mu_{ij}, U_{\theta}^T\Sigma_{ij}U_{\theta})du\\
+&=
+\kappa_{ij} \int \Phi(\|\theta\|u_1) f_1(u_1|(U_{\theta}^T\mu_{ij})_1, (U_{\theta}^T\Sigma_{ij}U_{\theta})_{11})du_1\\
+&=
+\kappa_{ij} \int \Phi(\|\theta\|u_1) f_1(u_1|\frac{\theta^T\mu_{ij}}{\|\theta\|}, \frac{\theta^T\Sigma_{ij}\theta}{\|\theta\|^2})du_1\\
+&=
+\kappa_{ij} \int \Phi(z) f_1(z|{\theta^T\mu_{ij}}, {\theta^T\Sigma_{ij}\theta})\frac{1}{\|\theta\|}dz\\
+&=
+\frac{\kappa_{ij} }{\|\theta\|}\int \Phi(z) f_1(\frac{z - {\theta^T\mu_{ij}}}{\sqrt{\theta^T\Sigma_{ij}\theta}}|0,1)dz\\
+&=
+\frac{\kappa_{ij}\sqrt{\theta^T\Sigma_{ij}\theta} }{\|\theta\|}\int  \Phi(w\sqrt{\theta^T\Sigma_{ij}\theta}+  \theta^T\mu_{ij})f_1(w|0,1)dw\\
+&=
+\frac{\kappa_{ij}\sqrt{\theta^T\Sigma_{ij}\theta} }{\|\theta\|}\int  \Phi(
+	w\sqrt{\theta^T\Sigma_{ij}\theta}+  		
+	\frac{\theta^T\mu_{ij}}		
+	{\sqrt{\theta^T\Sigma_{ij}\theta}}
+	\sqrt{\theta^T\Sigma_{ij}\theta}
+)f_1(w|0,1)dw\\
+&=
+\frac{\kappa_{ij}s}{\|\theta\|}\int  \Phi(\frac{w+m}{s})
+)f_1(w|0,1)dw \text{ if $s\equiv	\sqrt{\theta^T\Sigma_{ij}\theta}^{-1}$ and $m\equiv 	\frac{\theta^T\mu_{ij}}		
+ {\sqrt{\theta^T\Sigma_{ij}\theta}}$}\\
+&=
+\frac{\kappa_{ij}s }{\|\theta\|}  \Phi(\frac{m}{1+s^2})
+\end{align*}
+
+This provides a formula for 
+
+%Real reference: http://stats.stackexchange.com/questions/61080/how-can-i-calculate-int-infty-infty-phi-left-fracw-ab-right-phiw
+
+%, or \EMK{if all else fails} Hermite polynomials. \EMK{ugh what a mess that will be}. \EMK{Can we do those integrals if we include a link function? Maybe a probit link would allow crafty integration by parts??}
+
+ %If we choose $(\ell,j)=\tau^{-1}(k)$ by setting $\ell=k$ modulo $B$ and $j=(k-\ell)/B_\phi$, then $A$ is 
 
 %and an initial state $f_0$, we want to compute $[D_{\hat{\alpha}}+\hat{L}_{acc}]^P(f_0)$ for some moderately high exponent $P$. To simplify the problem, suppose we set $f_0$ to $h_1$, one of the initial $B$ basis functions. Also, suppose that we restrict $\hat{\alpha}$ to a form where for any of our basis functions $h_i$, we can expand $\hat{\alpha}h_i$ as a sum $\sum_{i=1}^B d_i h_i$. 
 %Computing $\hat{L}_{acc}(f_0)$ is simple: $\hat{L}_{acc}(f_0) = \sum_{i=1}^B \hat{L}_{acc}(d_i h_i) = \sum_{i=1}^B [\hat{M}c]_i h_i$ \EMK{Missing factor of C somewhere}. The difficulty lies in finding a representation of $D_{\hat{\alpha}}(f_0)$ in this basis, i.e. evaluating or quickly approximating integrals of the form $\int_{\Omega} h_i(x)h_j(x)\hat{\alpha}(x)dx$. \EMK{Maybe we'll choose a crafty form for $\hat{\alpha}$ and do this analytically. }
