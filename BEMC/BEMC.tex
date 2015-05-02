@@ -272,14 +272,14 @@ For one further refinement, we could include some prior information about $M$. S
 In BEMC as presented in section \ref{sec:BEMC}, there was nothing to gain by representing our estimate $\hat{\pi}$ of the target outside of the span of $\{h_i\}_{i=1}^B$: any component orthogonal to $\text{span}\{h_i\}_{i=1}^B$ would get zeroed out upon a single application of $\hat{L}$. This is no longer the case; because of the diagonal term $D_{rej}$, we have no guarantee that our approximation stay within any particular finite-dimensional subspace. We still need to represent $\hat{\pi}$ in computer memory, so for now, we'll sweep the issue under the rug and consider only approximations that we can write as $\hat{\pi}(x) = \sum_{i=1}^{B}v_{i}h_i(x)$. Our final approximation to the transition kernel will be $$ (P_{\text{span}\{h_i\}}\hat{D}_{rej} + 
 \hat{L}_{acc}),$$ where $P_{\text{span}\{h_i\}}$ is the orthogonal projector onto the set of functions expressible as $\sum_{i=1}^{B}v_{i}h_i(x)$.
 
-To simplify notation, let $\psi_{\tau(\ell, i)}\equiv\phi_\ell h_i$ for some bijective $\tau()$. In this paragraph, $k$ or $\ell$ are outputs from $\tau$ while $i$ and $j$ are inputs or plain indices. We drop this division later when three indices of one ``type'' are needed. We define matrices $D$ so that $d_{jk}=\int \psi_k(x)h_j(x)dx$ and $E$ so that $e_{k, \ell}=\int \psi_k(x)\psi_\ell(x)dx$. So, $D$ is rectangular, and $E$ is square and bigger than $C$. The product $CDE$ makes sense. The projector $P_{\text{span}\{h_i\}}$ takes the form of a matrix $Q$ of the same size as $D$. This matrix multiplies coefficients $v_{k}$, which we take from a function represented as $\sum_{ k}v_{k} \psi_k(x)$, and produces coefficients $w_{i}$ to minimize the $\mathcal{L}_2$ residual $\int(\sum_{k}v_{k} \psi_k(x) - \sum_{i} w_i h_i(x))^2$. Distributing the sum and moving the integral inside, that becomes 
+To simplify notation, let $\psi_{\tau(\ell, i)}\equiv\phi_\ell h_i$ for some bijective $\tau()$. In this paragraph, $k$ or $\ell$ are outputs from $\tau$ while $i$ and $j$ are inputs or plain indices. We drop this convention later when three indices of one ``type'' are needed. We define matrices $D$ so that $d_{jk}=\int \psi_k(x)h_j(x)dx$ and $E$ so that $e_{k, \ell}=\int \psi_k(x)\psi_\ell(x)dx$. So, $D$ is rectangular, and $E$ is square and bigger than $C$. The product $CDE$ makes sense. The projector $P_{\text{span}\{h_i\}}$ will take the form of a matrix $Q$, and $Q$ will have the same size as $D$. In order to help $Q$ carry out a single application of $P_{\text{span}\{h_i\}}$, we imagine coefficients $v_{k}$ taken from a function of the form $\sum_{ k}v_{k} \psi_k(x)$. Because of the properties of orthogonal projectors, performing $Qv$ should produce coefficients $w_{i}$ that minimize the $\mathcal{L}_2$ residual $\int(\sum_{k}v_{k} \psi_k(x) - \sum_{i} w_i h_i(x))^2$. This gives us a tool to deduce $Q$. Distributing the sum and moving the integral inside, the residual becomes 
 \begin{align*}
 \int(\sum_{k}v_{k} \psi_k(x) - \sum_{i} w_i h_i(x))^2 &=\int \sum_{k}v_{k} \psi_k(x)\sum_{\ell}v_{\ell} \psi_\ell(x) - 2\sum_{k}v_{k} \psi_k(x) \sum_{i} w_i h_i(x) + \sum_{i} w_i h_i(x) \sum_{j} w_j h_j(x) \\
 &= \sum_{k,\ell}v_{k} v_{\ell} e_{kl} - 2\sum_{k,i} w_i v_{k} d_{ik} + \sum_{i}  \sum_{j}w_i w_j c_{ij}  \\
 &= v^TEv - 2v^TDw + w^TCw  .
 \end{align*}
 
-Setting the gradient to zero yields
+Setting its gradient to zero yields $Q=C^{-1}D^T$ because
 \begin{align*}
 &0= -2v^TD + 2w^TC\\
 \implies& D^Tv = C^Tw\\ \
@@ -310,7 +310,9 @@ Since we now know we can apply $ P_{\text{span}\{h_i\}}$ by calculating $C^{-1}D
 \subsection{A concrete choice of basis for BEMC-R}
 \label{sec: BEMC-R_concrete}
 
-We can implement this rejection-tolerant version on $\mathbb{R}^D$ using a list of Gaussians for $\{h_i\}_{i=1}^B$ like in section \ref{sec: BEMC_concrete}. In selecting $\{\phi_i\}_{i=1}^{B_\phi}$, we want to make it easy to compute inner products of the form $\int \phi_k(x)h_i(x)h_j(x)dx$. We also want something appropriate to express $\alpha$ as it occurs naturally. These requirement suggest using constants and Gaussians. We suggest one additional change: if $\Phi$ is the cumulative distribution function of the standard normal, and $f_D(\cdot|\mu, \Sigma)$ is a normal density on $R^D$, then for any pair of our basis functions, $\int \Phi(\theta ^T x)h_i(x)h_j(x)dx$ can be calculated as follows. First, simplify $h_i(x)h_j(x)$ into a single normal density. Below, the basis functions $i$ and $j$ have precision matrices $\Lambda_i$ and $\Lambda_j$, with $\Lambda_{ij}\equiv \Lambda_i+\Lambda_j$ and $\mu_{ij}\equiv \Lambda_{ij}^{-1}(\Lambda_i\mu_i+\Lambda_j\mu_j)$.
+We can implement this rejection-tolerant version on $\mathbb{R}^D$ using a list of Gaussians for $\{h_i\}_{i=1}^B$ like we do in section \ref{sec: BEMC_concrete}. In selecting $\{\phi_i\}_{i=1}^{B_\phi}$, we want to make it easy to compute inner products of the form $\int \phi_k(x)h_i(x)dx$. We also want something appropriate to express $\alpha$ as it occurs naturally. These requirement suggest using constants and Gaussians, but on top of that, we suggest one additional change. If $\Phi$ is the cumulative distribution function of the standard normal, and $f_D(\cdot|\mu, \Sigma)$ is a normal density on $R^D$, then for any pair of our basis functions, $\int \Phi(\theta ^T x)h_i(x)h_j(x)dx$ will still be tractable. This is worth the added complexity because probits, regularly used in situations with binary response and continuous predictors, will capture $\alpha$ more easily. 
+
+The necessary calculation follows. First, simplify $h_i(x)h_j(x)$ into a single normal density. Below, the basis functions $i$ and $j$ have precision matrices $\Lambda_i$ and $\Lambda_j$, with $\Lambda_{ij}\equiv \Lambda_i+\Lambda_j$ and $\mu_{ij}\equiv \Lambda_{ij}^{-1}(\Lambda_i\mu_i+\Lambda_j\mu_j)$.
 \begin{align*}
 h_i(x)h_j(x) 
 &=\frac{1}{(2\pi)^{n/2}|\Sigma_i|}
@@ -356,38 +358,39 @@ $$
 ,$$
  the integral follows. Define $U_{\theta}$ to be an orthogonal matrix so that $\theta^T U_{\theta}$ is $(\|\theta\|, 0, 0, ...,0 )$, i.e. so that the first column is a multiple of $\theta$, and define $u \equiv U_{\theta}^Tx$. 
 \begin{align*}
-\int \Phi(\theta ^T x)h_i(x)h_j(x)dx &=
-\kappa_{ij} \int \Phi(\theta ^T x)  f_D(x|\mu_{ij}, \Sigma_{ij})dx\\
+\int \Phi(\theta ^T x)h_i(x)h_j(x)dx 
+&=\kappa_{ij} 
+\int \Phi(\theta ^T x)  f_D(x|\mu_{ij}, \Sigma_{i})dx\\
+&=\kappa_{ij} 
+\int \Phi(\theta ^T U_{\theta}u) f_D(U_{\theta}u|\mu_{ij}, \Sigma_{i})du\\
+&=\kappa_{ij} 
+\int \Phi(\|\theta\|u_1) f_D(u|U_{\theta}^T\mu_{ij}, U_{\theta}^T\Sigma_{i}U_{\theta})du\\
+&=\kappa_{ij} 
+\int \Phi(\|\theta\|u_1) f_1(u_1|(U_{\theta}^T\mu_{ij})_1, (U_{\theta}^T\Sigma_{i}U_{\theta})_{11})du_1\\
+&=\kappa_{ij} 
+ \int \Phi(\|\theta\|u_1) f_1(u_1|\frac{\theta^T\mu_{ij}}{\|\theta\|}, \frac{\theta^T\Sigma_{i}\theta}{\|\theta\|^2})du_1\\
+&=\kappa_{ij} 
+\int \Phi(z) f_1(z|{\theta^T\mu_{ij}}, {\theta^T\Sigma_{i}\theta})\frac{1}{\|\theta\|}dz\\
 &=
-\kappa_{ij} \int \Phi(\theta ^T U_{\theta}u) f_D(U_{\theta}u|\mu_{ij}, \Sigma_{ij})du\\
+\frac{\kappa_{ij} }{\|\theta\|}\int \Phi(z) f_1(\frac{z - \theta^T\mu_i}{\sqrt{\theta^T\Sigma_{i}\theta}}|0,1)dz\\
 &=
-\kappa_{ij} \int \Phi(\|\theta\|u_1) f_D(u|U_{\theta}^T\mu_{ij}, U_{\theta}^T\Sigma_{ij}U_{\theta})du\\
+\frac{\kappa_{ij} \sqrt{\theta^T\Sigma_{i}\theta}}{\|\theta\|}\int  \Phi(w\sqrt{\theta^T\Sigma_{i}\theta}+  \theta^T\mu_{ij})f_1(w|0,1)dw\\
 &=
-\kappa_{ij} \int \Phi(\|\theta\|u_1) f_1(u_1|(U_{\theta}^T\mu_{ij})_1, (U_{\theta}^T\Sigma_{ij}U_{\theta})_{11})du_1\\
-&=
-\kappa_{ij} \int \Phi(\|\theta\|u_1) f_1(u_1|\frac{\theta^T\mu_{ij}}{\|\theta\|}, \frac{\theta^T\Sigma_{ij}\theta}{\|\theta\|^2})du_1\\
-&=
-\kappa_{ij} \int \Phi(z) f_1(z|{\theta^T\mu_{ij}}, {\theta^T\Sigma_{ij}\theta})\frac{1}{\|\theta\|}dz\\
-&=
-\frac{\kappa_{ij} }{\|\theta\|}\int \Phi(z) f_1(\frac{z - {\theta^T\mu_{ij}}}{\sqrt{\theta^T\Sigma_{ij}\theta}}|0,1)dz\\
-&=
-\frac{\kappa_{ij}\sqrt{\theta^T\Sigma_{ij}\theta} }{\|\theta\|}\int  \Phi(w\sqrt{\theta^T\Sigma_{ij}\theta}+  \theta^T\mu_{ij})f_1(w|0,1)dw\\
-&=
-\frac{\kappa_{ij}\sqrt{\theta^T\Sigma_{ij}\theta} }{\|\theta\|}\int  \Phi(
-	w\sqrt{\theta^T\Sigma_{ij}\theta}+  		
+\frac{\kappa_{ij} \sqrt{\theta^T\Sigma_{i}\theta} }{\|\theta\|}\int  \Phi(
+	w\sqrt{\theta^T\Sigma_{i}\theta}+  		
 	\frac{\theta^T\mu_{ij}}		
-	{\sqrt{\theta^T\Sigma_{ij}\theta}}
-	\sqrt{\theta^T\Sigma_{ij}\theta}
+	{\sqrt{\theta^T\Sigma_{i}\theta}}
+	\sqrt{\theta^T\Sigma_{i}\theta}
 )f_1(w|0,1)dw\\
 &=
-\frac{\kappa_{ij}s}{\|\theta\|}\int  \Phi(\frac{w+m}{s})
-)f_1(w|0,1)dw \text{ if $s\equiv	\sqrt{\theta^T\Sigma_{ij}\theta}^{-1}$ and $m\equiv 	\frac{\theta^T\mu_{ij}}		
- {\sqrt{\theta^T\Sigma_{ij}\theta}}$}\\
+\frac{\kappa_{ij} s}{\|\theta\|}\int  \Phi(\frac{w+m}{s})
+)f_1(w|0,1)dw \text{ if $s\equiv	\sqrt{\theta^T\Sigma_{i}\theta}^{-1}$ and $m\equiv 	\frac{\theta^T\mu_{ij}}		
+ {\sqrt{\theta^T\Sigma_{i}\theta}}$}\\
 &=
-\frac{\kappa_{ij}s }{\|\theta\|}  \Phi(\frac{m}{1+s^2})
+\frac{\kappa_{ij} s }{\|\theta\|}  \Phi(\frac{m}{1+s^2})
 \end{align*}
 
-This provides a formula for 
+This provides a formula for the matrix $D$ from section \ref{BEMC-R-target}.
 
 %Real reference: http://stats.stackexchange.com/questions/61080/how-can-i-calculate-int-infty-infty-phi-left-fracw-ab-right-phiw
 

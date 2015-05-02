@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2012.6.30)  2 MAY 2015 07:57
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2012.6.30)  2 MAY 2015 08:36
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -415,17 +415,7 @@ Overfull \hbox (25.421pt too wide) in paragraph at lines 280--280
  []
 
 [6]
-Overfull \hbox (6.0999pt too wide) in paragraph at lines 313--314
-\OT1/cmr/m/n/10 1.2.2[]. In se-lect-ing $\OMS/cmsy/m/n/10 f\OML/cmm/m/it/10 ^^^
-[]\OMS/cmsy/m/n/10 g[]$\OT1/cmr/m/n/10 , we want to make it easy to com-pute in
--ner prod-ucts of the form $[] \OML/cmm/m/it/10 ^^^[]\OT1/cmr/m/n/10 (\OML/cmm/
-m/it/10 x\OT1/cmr/m/n/10 )\OML/cmm/m/it/10 h[]\OT1/cmr/m/n/10 (\OML/cmm/m/it/10
- x\OT1/cmr/m/n/10 )\OML/cmm/m/it/10 h[]\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 x\OT1/
-cmr/m/n/10 )\OML/cmm/m/it/10 dx$\OT1/cmr/m/n/10 .
- []
-
-
-Overfull \hbox (69.94038pt too wide) in paragraph at lines 347--347
+Overfull \hbox (69.94038pt too wide) in paragraph at lines 349--349
 [] 
  []
 
@@ -460,7 +450,7 @@ b></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
 usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></u
 sr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb></usr
 /local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on BEMC.pdf (8 pages, 267157 bytes).
+Output written on BEMC.pdf (8 pages, 267794 bytes).
 PDF statistics:
  119 PDF objects out of 1000 (max. 8388607)
  86 compressed objects within 1 object stream
