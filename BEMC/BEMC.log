@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2012.6.30)  2 MAY 2015 08:36
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2012.6.30)  9 MAY 2015 10:39
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -410,12 +410,12 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <6> not available
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 [5]
-Overfull \hbox (25.421pt too wide) in paragraph at lines 280--280
+Overfull \hbox (25.421pt too wide) in paragraph at lines 283--283
 [] 
  []
 
 [6]
-Overfull \hbox (69.94038pt too wide) in paragraph at lines 349--349
+Overfull \hbox (69.94038pt too wide) in paragraph at lines 352--352
 [] 
  []
 
@@ -427,7 +427,7 @@ Here is how much of TeX's memory you used:
  7647 multiletter control sequences out of 15000+200000
  18525 words of font info for 71 fonts, out of 3000000 for 9000
  957 hyphenation exceptions out of 8191
- 38i,14n,32p,1135b,393s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 38i,14n,32p,1124b,393s stack positions out of 5000i,500n,10000p,200000b,50000s
 </usr/local/texlive/2012/texmf-dist/fonts/ty
 pe1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2012/texmf-dist/fonts/typ
 e1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2012/texmf-dist/fonts/type
@@ -450,7 +450,7 @@ b></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
 usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></u
 sr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb></usr
 /local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on BEMC.pdf (8 pages, 267794 bytes).
+Output written on BEMC.pdf (8 pages, 266690 bytes).
 PDF statistics:
  119 PDF objects out of 1000 (max. 8388607)
  86 compressed objects within 1 object stream

@@ -103,11 +103,11 @@ In MCMC methods, chains are usually left to run until the Markov chain converges
 
 \subsubsection{Notation and setup}
 
-Our estimator begins with a fixed set of basis functions $\{h_i\}_1^B$. We will have two sources of error: discretization from the finite basis and stochasticity from the sample. Object suffering from discretization error will be labeled with tildes, while objects also suffering from stochasticity will be labeled with hats. There is one exception: we estimate a matrix called $M$, with both error sources present, and it will appear with no hat.
+We will have two sources of error: discretization from the finite basis and stochasticity from the sample. Objects suffering from discretization error will be labeled with tildes, while objects also suffering from stochasticity will be labeled with hats. There is one exception: we estimate a matrix called $M$, with both error sources present, and it will appear with no hat or tilde.
 
-For an unknown transition kernel $K$, define $\tilde{M}$ to be the matrix that minimizes the squared $\mathcal{L}_2$ distance $\|K - \sum_{i,j}^B\tilde{m}_{ij} h_i \otimes h_j\|^2$, or in other terms the matrix that minimizes the integral $$\int_{\Omega\times\Omega}(K(x,y) - \sum_{i,j}^B\tilde{m}_{ij} h_i(x)h_j(y))^2dx dy .$$ \EMK{Surely this minimum must exist for a quadratic?} Then define $\tilde{K}(x,y) \equiv \sum_{i,j=1}^B \tilde{m}_{ij} h_i(x)h_j(y)$ and define $\tilde{L}$ so that $(\tilde{L}f)(x)$ is $$\int_{\Omega}\tilde{K}(x,y)f(y)dy.$$
+Our estimator begins with a fixed set of basis functions $\{h_i\}_1^B$. These might be multivariate normal density functions. We then define some relevant operators and kernels, plus the matrices of coefficient when we expand them in the basis of $h$'s. For an unknown transition kernel $K$, define $\tilde{M}$ to be the matrix that minimizes the squared $\mathcal{L}_2$ distance $\|K - \sum_{i,j}^B\tilde{m}_{ij} h_i \otimes h_j\|^2$, or in other terms the matrix that minimizes the integral $$\int_{\Omega\times\Omega}(K(x,y) - \sum_{i,j}^B\tilde{m}_{ij} h_i(x)h_j(y))^2dx dy .$$ \EMK{Surely this minimum must exist for a quadratic?} Then define $\tilde{K}(x,y) \equiv \sum_{i,j=1}^B \tilde{m}_{ij} h_i(x)h_j(y)$ and define $\tilde{L}$ so that $(\tilde{L}f)(x)$ is $$\int_{\Omega}\tilde{K}(x,y)f(y)dy.$$
 
-We will attempt to estimate $\tilde{M}$ using a matrix $M$, and the corresponding approximation for $K$ will be 
+Later, we will make a noisy estimate of $\tilde{M}$, calling it $M$. The corresponding estimate for $K$ will be 
 \begin{equation}
 \label{eqn:khatdef}
 \hat{K}(x,y) = \sum_{i,j=1}^B M_{ij} h_i(x)h_j(y).\end{equation}
@@ -115,16 +115,16 @@ We will attempt to estimate $\tilde{M}$ using a matrix $M$, and the correspondin
 Similar to before, $\hat{L}$ is defined so that $(\hat{L}f)(x)$ is $$\int_{\Omega}\hat{K}(x,y)f(y)dy.$$
 
 
-We define a matrix $\tilde{G}$ elementwise so that $\tilde{g}_{ij}\equiv \int_{\Omega} h_i(x)(\tilde{L}h_j)(x)dx$, with the corresponding statement for hatted variables so that $\hat{g}_{ij}\equiv \int_{\Omega} h_i(x)(\hat{L}h_j)(x)dx$. We also make use of the $\mathcal{L}_2$ inner products $c_{ij}\equiv \int_{\Omega} h_i(x)h_j(x)dx$.
+Finally, the next few definitions will help describe the interaction of the $h$'s with one another. We define a matrix $\tilde{G}$ elementwise so that $\tilde{g}_{ij}\equiv \int_{\Omega} h_i(x)(\tilde{L}h_j)(x)dx$, with the corresponding statement for hatted variables so that $\hat{g}_{ij}\equiv \int_{\Omega} h_i(x)(\hat{L}h_j)(x)dx$. We also make use of the $\mathcal{L}_2$ inner products $c_{ij}\equiv \int_{\Omega} h_i(x)h_j(x)dx$.
 
 \subsection{The BEMC estimator}
 
-Since $\hat{g}_{ij}$ expands as $$ \int_{\Omega} h_i(x)\left[\sum_{\ell,k} M_{k\ell}h_k(x)\int_{\Omega} h_\ell(y)h_j(y)dy\right]dx= \sum_{\ell,k} M_{k\ell}C_{\ell j}C_{ik},$$ we know that $\hat{G}=CMC$. One nice special case of this formula: for some choices of $\{h_i\}_1^B$, $C$ is the identity matrix and $\hat{G}=M$. We assume $C$ is readily calculable and not too badly conditioned, so that if we can estimate $G$, we can estimate $M$ as $C^{-1}GC^{-1}$. We now focus on $G$. 
+Since $\hat{g}_{ij}$ expands as $$ \int_{\Omega} h_i(x)\left[\sum_{\ell,k} M_{k\ell}h_k(x)\int_{\Omega} h_\ell(y)h_j(y)dy\right]dx= \sum_{\ell,k} M_{k\ell}C_{\ell j}C_{ik},$$ we know that $\hat{G}=CMC$. One nice special case of this formula: for some choices of $\{h_i\}_1^B$, $C$ is the identity matrix and $\hat{G}=M$. We assume $C$ is readily calculable and not too badly conditioned, so that if we can estimate $G$, we can estimate $M$ as $C^{-1}GC^{-1}$. We now focus on $G$, which we approximate via importance sampling. 
 
-Think of $Lh_j$ as a probability distribution: it corresponds to initializing the sample from a draw $z\sim h_j$, then running a single step of Metropolis-Hastings. By definition, $G$ can be written as an expectation $G_{ij} = E_{Lh_j}[h_i]$. This motivates us to sample from a normalized version of $Lh_j$ and approximate $G_{ij}$ as an average. All we need to do is sample $z$ from $h_j$, run an M-H iteration on $z$ to get $w$, and retain $w$ as our sample from $Lh_j$. \EMK{Conjecture: the hats converge to the tildes as you run it for longer, and the tildes converge to the truth as you lengthen the basis.}
+If $h_j$ is a valid density function, then by definition, $G$ can be written as an expectation $G_{ij} = E_{Lh_j}[h_i]$. Indeed, if $h_j$ is a valid density function, then $Lh_j$ is a probability distribution, too. What generative process does this distribution describe? It corresponds to initializing the sample from a draw $z\sim h_j$, then running a single step of Metropolis-Hastings. Consequently, even though $L$ is unknown, sampling from $Lh_j$ is straightforward. This motivates us to sample from a normalized version of $Lh_j$ and approximate $G_{ij}$ as an average. All we need to do is sample $z$ from $h_j$, run an M-H iteration on $z$ to get $w$, and retain $w$ as our sample from $Lh_j$. \EMK{Conjecture: the hats converge to the tildes as you run it for longer, and the tildes converge to the truth as you lengthen the basis.}
 
-\subsubsection{Basic Estimator Properties}
-Our approximation can only imitate continuous kernels, i.e. situations where $\int K(x,y)f(y)dy$ can be done with respect to the Lebesgue measure. This presents an obstacle, because with positive probability, the Metropolis-Hastings algorithm will reject a proposed sample and stay in place. As a workaround, we can approximate the kernel not of a single M-H iteration but of $r$ iterations for $r$ around 10 or 20. The probability of $r$ consecutive rejections is much smaller, pushing the true kernel closer to the subspace in which we approximate it. In section \ref{sec:BEMC-R}, we discuss a variant that explicitly models rejection events.
+\subsubsection{Basic Limitations}
+Our approximation can only imitate continuous kernels, i.e. situations where $\int K(x,y)f(y)dy$ can be done with respect to the Lebesgue measure. This might be reasonable if $K$ represented a complete cycle through a Gibbs sampler. For the Metropolis-Hastings algorithm, this presents an obstacle, because with positive probability, it will reject a proposed sample and stay in place. As a workaround, we can approximate the kernel not of a single M-H iteration but of $r$ iterations for $r$ around 10 or 20. The probability of $r$ consecutive rejections is much smaller, pushing the true kernel closer to the subspace in which we approximate it. In section \ref{sec:BEMC-R}, we discuss a variant that explicitly models rejection events.
 
 \subsubsection{A more concrete procedure using a Gaussian basis}
 \label{sec: BEMC_concrete}
@@ -156,16 +156,17 @@ For $n = 1:N$\\
 \Indp
 Draw a sample $z_n$ from $h_{j}$, i.e. a normal draw with mean $\mu_j$ and variance $\sigma_j^2$.\\
 Run the M-H sampler for $\ell$ rounds on $z_n$. Call the result $w_n$.\\
-Increment $G_{i, j}$ by $h_{i}(w_n)/N$.\\
+Increment $G_{ij}$ by $h_{i}(w_n)$.\\
 \Indm
 \Indm
 \Indm
+Divide $G$ by $N$.
 
 \end{algorithm}
 
 \section{Stage two: calculating the target}
 \label{BEMC-target}
-We now explain how to get, from our approximation for the kernel, an approximation for the target. We make use of the power method, a simple algorithm for eigenvector computation. Given a matrix $M$, the power method computes $v\leftarrow M^v$ for any initial vector $v$, iterating until convergence. For ``nice'' matrices, this converges rapidly to an eigenvector; for ``nicer'' ones, the result is always the unique dominant eigenvector. MCMC schemes essentially rely on the same idea: for any initial distribution $f$, and for a Markov kernel $K$, turn it into a sample from $Lf=\int K(\cdot, y)f(y)dy$, and iterate; samples from $L^Pf$ for some large integer $P$ are good enough because $L^Pf$ converges to $\pi$. 
+We now explain how to get, from our approximation for the kernel, an approximation for the target. We make use of the power method, a simple algorithm for eigenvector computation. Given a matrix $M$, the power method computes $v\leftarrow Mv$ for any initial vector $v$, iterating until convergence. For ``nice'' matrices, this converges rapidly to an eigenvector; for ``nicer'' ones, the result is always the unique dominant eigenvector. MCMC schemes essentially rely on the same idea: for any initial distribution $f$, and for a Markov kernel $K$, turn it into a sample from $Lf=\int K(\cdot, y)f(y)dy$, and iterate; samples from $L^Pf$ for some large integer $P$ are good enough because $L^Pf$ converges to $\pi$ just as $Mv$ converges to an eigenvector. 
 
 %%We claim that $\hat{L}^P(f)$ can be computed by replacing ${M}$ in equation (\ref{eqn:khatdef}) with $(MC)^{P-1}M$. For example,
 %
@@ -184,7 +185,7 @@ We now explain how to get, from our approximation for the kernel, an approximati
 %&=  \sum_{k,j=1}^B h_k(x)(MCMCM)_{kj}\int h_j(y)f(y)dy \\
 %\end{align*}
 
-So, suppose we want a distribution $\hat{\pi}$ with the property $\hat{\pi}=\hat{L}\hat{\pi}$. From the form of $\hat{L}$, we know that $\hat{\pi}\in \text{span}\{h_i|i \in 1...B\}$, so we need only find the vector of coefficients, which we call $v$. As it turns out, $v$ must be an eigenvector of $MC$; the dominant eigenvector is the obvious choice.
+So, suppose we want a distribution $\hat{\pi}$ with the property $\hat{\pi}=\hat{L}\hat{\pi}$. From the form of $\hat{L}$, we know that $\hat{\pi}\in \text{span}\{h_i|i \in 1...B\}$, so we need only find the vector of coefficients, which we call $v$. As it turns out, $v$ must be an eigenvector of $MC$, which we show below. 
 
 \begin{align*}
  \sum_{k=1}^Bv_kh_k(x)&=\hat{\pi}(x) \\
@@ -216,11 +217,12 @@ Return $\sum_i v_i h_i$ as a posterior estimate\\
 \section{BEMC-R, a variant modeling rejections}
 \label{sec:BEMC-R}
 
-As we mention in section \ref{sec:BEMC}, our scheme is able to model continuous kernels. On the other hand, the Metropolis-Hastings algorithm sometimes rejects proposed samples, and its kernel will assign positive mass to intervals on the ``diagonal'' set $\{x,y \in \Omega^2 | x=y\}$. In this section, we introduce a variant of BEMC that explicitly models rejections by the sampler. 
+As we mention in section \ref{sec:BEMC}, our scheme is able to model continuous kernels. On the other hand, the Metropolis-Hastings algorithm sometimes rejects proposed samples, and its kernel will assign positive mass to intervals on the ``diagonal'' set $\{(x,y) \in \Omega^2 | x=y\}$. In this section, we introduce a variant of BEMC that explicitly models rejections by the sampler. 
 
-Let us look at the Metropolis-Hastings kernel in more detail. Going back to the algorithm, the quantity $\alpha(x|y)$ is the probability of accepting a move from $y$ to $x$. For convenience, let $$\alpha(y)=P(\text{accept next move $|$ currently at }y).$$ Splitting up the next draw as an alternative between moving and staying put, we can write $K(x, y) = (1-\alpha(y))\delta_{y}(x) + \alpha(y)f_{acc}(x|y)$. In this expression, $f_{acc}(x|y)$ is the conditional density of $x$ given that our move out of $y$ was not rejected. Though it will help in our development, we acknowledge this quantity is strange to consider, because we never observe a rejection or acceptance without also knowing where the proposal was. Certainly, $f_{acc}$ is not the same as $q(x_2|x_1)$, since conditioning on the acceptance increases the chance that we moved into a region of higher probability. To set up the last line below, define the operator $D_{rej}$ from $\alpha$ so that $(D_{rej}f)(x)\equiv (1-\alpha(x))f(x)$, define $K_{acc}(x,y)$ as $f_{acc}(x|y)\alpha(y)$, and let $(L_{acc}f)(x)\equiv \int K_{acc}(x,y)f(y)dy$.
+Let us look at the Metropolis-Hastings kernel in more detail. Going back to the algorithm, the quantity $\alpha(x|y)$ is the probability of accepting a move from $y$ to $x$. This is a function of two variables, but for convenience, let us introduce a univariate function $$\alpha(y)=P(\text{accept next move $|$ currently at }y).$$ Splitting up the next draw as an alternative between moving and staying put, we can write $K(x, y) = (1-\alpha(y))\delta_{y}(x) + \alpha(y)f_{acc}(x|y)$. In this expression, $f_{acc}(x|y)$ is the conditional density of $x$ given that our move out of $y$ was not rejected, while $\delta_y(\cdot)$ is a point mass at $y$. %Though it will help in our development, we acknowledge this quantity is strange to consider, because we never observe a rejection or acceptance without also knowing where the proposal was. Certainly, $f_{acc}$ is not the same as $q(x_2|x_1)$, since conditioning on the acceptance increases the chance that we moved into a region of higher probability. 
+To set up the last line below, define the operator $D_{rej}$ from $\alpha$ so that $(D_{rej}f)(x)\equiv (1-\alpha(x))f(x)$, define $K_{acc}(x,y)$ as $f_{acc}(x|y)\alpha(y)$, and let $(L_{acc}f)(x)\equiv \int K_{acc}(x,y)f(y)dy$. The idea behind this notation is that $D_{rej}$ stands for a diagonal operator that describes rejection, and $K_{acc}$ is the Markov kernel but conditioned on acceptance.
 
-If $y$ precedes $x$ in the sampler, we can relate their PDF's with these operators.
+If $x$ comes right after $y$ in the sampler, we can relate their PDF's with these operators.
 \begin{align*}
  f_x(x) &= \int K(x, y)f_y(y)dy \\
 &= \int ((1-\alpha(y))\delta_{y}(x) + \alpha(y)f_{acc}(x|y))f_y(y)dy \\
@@ -234,7 +236,7 @@ We can sample from a pdf proportional to $D_{rej}f$ by sampling $y$ from $f_y()$
 To define another set of ``tilde'' objects, let  $\tilde{M}_{acc}$ be the matrix that minimizes the squared $\mathcal{L}_2$ distance $\|K_{acc} - \sum_{i,j}^B\tilde{m}_{ij} h_i \otimes h_j\|^2$, or in other terms the matrix that minimizes the integral $$\int_{\Omega\times\Omega}(K_{acc}(x,y) - \sum_{i,j}^B\tilde{m}_{ij} h_i(x)h_j(y))^2dx dy .$$ We will use a separate set of functions $\{\phi_i\}_{i=1}^{B_\phi}$ to approximate $\alpha$. Let $\tilde{r}$ be the vector that minimizes the integral $\int_{\Omega}(\alpha(x) -  \sum_{i=1}^{B_\phi}\tilde{r}_{i} \phi_j(y))^2dx  $ and let $\tilde{r}$ be $\sum_{i=1}^{B_\phi}\tilde{r}_{i} \phi_j(x)$
 
 This time around, we will try to estimate a function $\hat{\alpha}$ and a matrix $M$ so that $\hat{\alpha}\approx \tilde{\alpha}$ and $\hat{L}_{acc} \approx \tilde{L}_{acc}$.%, where $(\hat{L}_{acc}f)(x) =\sum_{i,j=1}^B h_i(x)M_{ij}\int h_j(x)f(x)dx$. Even if the parameters were chosen optimally, $L$ may not take the same form as $\hat{L}_{\alpha}+\hat{L}_{M}$, so the estimate $\hat{\pi}$ will not be correct. \EMK{Need some results answering ``in what sense is your method (approximately) correct?''}
-So, we need still need to estimate $M$, but with the added complication of trying to infer $\hat{\alpha}$ at the same time. Fortunately, it is easy to tell when the sampler rejects and when it doesn't, and this provides a way to tease out information about $\alpha$. Suppose for a moment that we start the sampler at a point $y$ and it takes a single step to $x$. If $x\neq y$, then the sampler has shown less of a tendency to reject starting from $y$, and we label $y$ with a $0$. If $x = y$, we label $y$ with a $1$. Once $\Omega$ is covered in zeroes and ones, there are many probabilistic classifier methods that could give an estimate of $\hat{\alpha}$, which at any given point is just the probability of labeling with a one. Meanwhile, whenever the sampler moves, we gain information about $L_{acc}$, and we can update $M$ as before. 
+ So, we need still need to estimate $M$, but with the added complication of trying to infer $\hat{\alpha}$ at the same time. Fortunately, it is easy to tell when the sampler rejects and when it doesn't, and this provides a way to tease out information about $\alpha$. Suppose for a moment that we start the sampler at a point $y$ and it takes a single step to a value we call $x$. If $x\neq y$, then the sampler has shown less of a tendency to reject starting from $y$, and we label $y$ with a $1$. If $x = y$, we label $y$ with a $0$. Once $\Omega$ is covered in zeroes and ones, there are many probabilistic classifier methods that could give an estimate of $\hat{\alpha}$, which at any given point is just the probability of labeling with a one. Meanwhile, whenever the sampler moves, we gain information about $L_{acc}$, and we can update $M$ as before. 
 
 This strategy still throws away useful information. To see why, recall that the Metropolis-Hastings algorithm makes a proposal, computes an rejection probability, flips a metaphorical coin with that probability, and then discards the rejection probability. When drawing a chain of samples, the rejection probability serves no further purpose, so discarding it is natural. In BEMC-R, though, we can keep it to provide a more efficient estimate of $\alpha$. If the rejection probability when proposing a move to $y$ from $x$ is $p$, then the better procedure is to label $y$ with $p$. Likewise, instead of updating the estimate of $M_{ij}$ using a sample of weight $1$ with probability $p$, we can update it using a sample of weight $p$ with probability 1.
 
@@ -242,25 +244,25 @@ We summarize the procedure in Algorithm \ref{algo:BEMC-R}.
 
 \begin{algorithm}[h]
 \caption{BEMC-R algorithm--stage one \label{algo:BEMC-R}}
-Set $M$ to $0$.\\ 
-Set a scalar $W$ to zero. $W$ is the effective number of samples in an estimate of an entry of $M$.\\
+Set $\hat{G}$ to $0$.\\ 
+Set a scalar $W$ to zero. $W$ is the effective number of samples in an estimate of an entry of $\hat{G}$.\\
 Set $T = \{\}$. $T$ will be the training set for $\hat{\alpha}$.\\
-For $b_{in}  = 1:B$\\
+For $i  = 1:B$\\
 \Indp
-For $b_{out}  = 1:B$\\
+For $j = 1:B$\\
 \Indp
 For $n = 1:N$\\
 \Indp
-Draw a sample $y_n$ from $h_{b_{in}}$.\\
-Draw a proposal $x_n|y_n$ and compute its rejection probability $p$.\\
+Draw a sample $y_n$ from $h_{j}$.\\
+From an MCMC sampler with the correct target, draw a proposal $x_n|y_n$ and compute its rejection probability $p$.\\
 Add $(y_n, p)$ to $T$.\\
-Increment $M_{b_{out}, b_{in}}$ by $ph_{b_{in}(x_n)}$.\\
-Increment $W$ by $p$.\\
+Increment $\hat{G}_{ij}$ by $ph_{i}(x_n)$.\\
+Increment $W_{ij}$ by $p$.\\
 \Indm
-Divide $M_{b_{out}, b_{in}}$ by $W$.\\
+Divide $\hat{G}_{ij}$ by $W_{ij}$.\\
 \Indm
 \Indm
-Train on $T$ to get $\hat{\alpha}$, represented by $\hat{r}$ \EMK{ Possibility here to choose $\phi$'s adaptively?}\\
+Train on $T$ to get $\hat{\alpha}$.%, represented by the vector $\hat{r}$ \EMK{ Possibility here to choose $\phi$'s adaptively?}\\
 \end{algorithm}
 
 For one further refinement, we could include some prior information about $M$. Since $L_{acc}$ mimics the action of the sampler as it moves, it might resemble the action of the proposal alone, with no rejections. That would mean $\hat{g}_{ij} \approx \int h_i(x)q(x|y)h_j(y)dydx$. For simple proposal distributions like a uniform or normal centered on the current value, this integral may be easy to find as a convolution.
@@ -269,7 +271,8 @@ For one further refinement, we could include some prior information about $M$. S
 \label{BEMC-R-target}
 
 
-In BEMC as presented in section \ref{sec:BEMC}, there was nothing to gain by representing our estimate $\hat{\pi}$ of the target outside of the span of $\{h_i\}_{i=1}^B$: any component orthogonal to $\text{span}\{h_i\}_{i=1}^B$ would get zeroed out upon a single application of $\hat{L}$. This is no longer the case; because of the diagonal term $D_{rej}$, we have no guarantee that our approximation stay within any particular finite-dimensional subspace. We still need to represent $\hat{\pi}$ in computer memory, so for now, we'll sweep the issue under the rug and consider only approximations that we can write as $\hat{\pi}(x) = \sum_{i=1}^{B}v_{i}h_i(x)$. Our final approximation to the transition kernel will be $$ (P_{\text{span}\{h_i\}}\hat{D}_{rej} + 
+In BEMC as presented in section \ref{sec:BEMC}, there was nothing to gain by representing our estimate $\hat{\pi}$ of the target outside of the span of $\{h_i\}_{i=1}^B$: any component orthogonal to $\text{span}\{h_i\}_{i=1}^B$ would get zeroed out upon a single application of $\hat{L}$. This is no longer the case; because of the diagonal term $D_{rej}$, we have no guarantee that our approximation stays within any particular finite-dimensional subspace. We still need to represent $\hat{\pi}$ in computer memory, so for now, we will %sweep the issue under the rug and 
+consider only approximations that we can write as $\hat{\pi}(x) = \sum_{i=1}^{B}v_{i}h_i(x)$. Our final approximation to the transition kernel will be $$ (P_{\text{span}\{h_i\}}\hat{D}_{rej} + 
 \hat{L}_{acc}),$$ where $P_{\text{span}\{h_i\}}$ is the orthogonal projector onto the set of functions expressible as $\sum_{i=1}^{B}v_{i}h_i(x)$.
 
 To simplify notation, let $\psi_{\tau(\ell, i)}\equiv\phi_\ell h_i$ for some bijective $\tau()$. In this paragraph, $k$ or $\ell$ are outputs from $\tau$ while $i$ and $j$ are inputs or plain indices. We drop this convention later when three indices of one ``type'' are needed. We define matrices $D$ so that $d_{jk}=\int \psi_k(x)h_j(x)dx$ and $E$ so that $e_{k, \ell}=\int \psi_k(x)\psi_\ell(x)dx$. So, $D$ is rectangular, and $E$ is square and bigger than $C$. The product $CDE$ makes sense. The projector $P_{\text{span}\{h_i\}}$ will take the form of a matrix $Q$, and $Q$ will have the same size as $D$. In order to help $Q$ carry out a single application of $P_{\text{span}\{h_i\}}$, we imagine coefficients $v_{k}$ taken from a function of the form $\sum_{ k}v_{k} \psi_k(x)$. Because of the properties of orthogonal projectors, performing $Qv$ should produce coefficients $w_{i}$ that minimize the $\mathcal{L}_2$ residual $\int(\sum_{k}v_{k} \psi_k(x) - \sum_{i} w_i h_i(x))^2$. This gives us a tool to deduce $Q$. Distributing the sum and moving the integral inside, the residual becomes 
