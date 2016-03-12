@@ -70,12 +70,12 @@
 \maketitle
 
 \begin{abstract}
-We introduce Basis Expansion Monte Carlo, which studies a Gibbs or Metropolis-Hastings sampler to infer the underlying transition kernel. To make inference about the steady state, which is usually the item of interest in a sampler, we compute the steady-state of the approximate kernel. We reduce this to an eigenvector calculation. Results show ...
+We introduce Basis Expansion Monte Carlo, which studies a Gibbs or Metropolis-Hastings sampler to infer the underlying transition kernel. To make inference about the target distribution, we compute the target produced by the approximate kernel. We reduce this to a fairly low-dimensional eigenvector calculation. The approach allows us to extract information wasted by common MCMC methods. Results show ...
 \end{abstract}
 
 
 \section{Introduction}
-In many statistical models, it is impossible to find a closed form for the distribution of interest (we will call this $\pi$). One work-around, originating in computational physics, relies on the fact that for points $x_1$ and $x_2$ in the parameter space, $\pi(x_1)/\pi(x_2)$ may still be calculable, though $\pi(x_1)$ and $\pi(x_2)$ are not. This fact is exploited to produce a Markov chain whose steady-state distribution is guaranteed to be $\pi$. 
+In Bayesian modeling, it is impossible to find a closed form for the distribution of interest $\pi$. One work-around, originating in computational physics, relies on the fact that for points $x_1$ and $x_2$ in the parameter space, $\pi(x_1)/\pi(x_2)$ may still be calculable, though $\pi(x_1)$ and $\pi(x_2)$ are not. This fact is exploited to produce a Markov chain whose steady-state distribution is guaranteed to be $\pi$. 
 
 More and references about history, background, and/or tutorials on monte carlo methods
 
@@ -213,6 +213,9 @@ Return $\sum_i v_i h_i$ as a posterior estimate\\
 %\subsection{BEMC-G, a Gibbs sampling variant}
 %\label{sec:BEMC-G}
 %This approximation can also be adapted to Gibbs sampling, a ubiquitous MCMC variant. 
+
+\section{Adding basis functions by reversing jumps}
+\label{sec:reverse_jumps}
 
 \section{BEMC-R, a variant modeling rejections}
 \label{sec:BEMC-R}
