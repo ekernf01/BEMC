@@ -1,0 +1,77 @@
+---
+title: "Simple BEMC"
+author: "Eric Kernfeld"
+date: "March 17, 2016"
+output: html_document
+---
+
+##Simple BEMC
+
+Code within this document implements a simple version of BEMC.
+
+####A simple M-H sampler for fodder
+
+This uses MH with a symmetric Gaussian proposal to generate draws from a Gamma(2, 2) target. It tests the results by plotting them against the true density.
+
+```{r}
+unit_gaussian = function(x)(rnorm(n = 1, sd = 1, mean = x))
+my_target = function(x)(dgamma(x, shape = 2, rate = 2))
+simple_sampler = function(points_in, 
+                          proposal = unit_gaussian, 
+                          target = my_target){
+  points_out = proposal(points_in)
+  #it's a symmetric proposal, so only the target enters this ratio.
+  accepts = rbinom(size = 1, n = length(points_out), 
+                   prob = pmin(1, target(points_out) / target(points_in)))
+  points_out[!accepts] = points_in[!accepts]
+  return(points_out)
+}
+
+CHAINLEN = 1e5
+x = rep(1, CHAINLEN)
+for(i in 2:CHAINLEN){
+  x[i] = simple_sampler(x[i-1])
+}
+hist(x, probability = TRUE, breaks = 100)
+lines(sort(x), my_target(sort(x)))
+```
+
+####BEMC code
+
+
+```{r}
+
+# sampler: a function taking a vector `points_in` of parameter values
+#          and returning a vector of outputs from an MH sampler initialized at points_in.
+# initvals: This gives the basis functions. 
+#           Should be a list with elements `$means` and `$covariances`. 
+NUM_BASIS = 100
+NUM_SAMPLES = 100
+bemc = function(sampler, initvals = list(means       = list(seq(0, 3, length.out = NUM_BASIS)), 
+                                         covariances = list(rep(0.1,  length.out = NUM_BASIS)))){
+  
+  #Estimate M
+  M = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS)
+  samples_before_mh = rep(0, NUM_SAMPLES)
+  samples_after_mh = rep(0, NUM_SAMPLES)
+  for(b_in in 1:NUM_BASIS){
+    samples_before_mh = rnorm(n = NUM_SAMPLES, mean = initvals$means[b_in],
+                              sd = sqrt(initvals$covariances[b_in])
+    for(b_out in 1:NUM_BASIS){
+      samples_after_mh = simple_sampler(points_in = samples_before_mh)
+      weights = dnorm(x = samples_after_mh,
+                      mean = initvals$means[b_out],
+                      sd = sqrt(initvals$covariances[b_out]))
+      M[b_in, b_out] = mean(weights)
+    }    
+  }
+  
+  #Get C
+  C = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS)
+  for(b_in in 1:NUM_BASIS){
+    for(b_out in 1:NUM_BASIS){
+      C[b_in, b_out] = 
+    }
+  }
+}
+```

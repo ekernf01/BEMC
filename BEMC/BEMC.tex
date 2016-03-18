@@ -75,13 +75,13 @@ We introduce Basis Expansion Monte Carlo, which studies a Gibbs or Metropolis-Ha
 
 
 \section{Introduction}
-In Bayesian modeling, it is impossible to find a closed form for the distribution of interest $\pi$. One work-around, originating in computational physics, relies on the fact that for points $x_1$ and $x_2$ in the parameter space, $\pi(x_1)/\pi(x_2)$ may still be calculable, though $\pi(x_1)$ and $\pi(x_2)$ are not. This fact is exploited to produce a Markov chain whose steady-state distribution is guaranteed to be $\pi$. 
+In Bayesian modeling, it is impossible to find a closed form for the posteror distribution of interest $\pi$. One work-around, originating in computational physics, is the Metropolis-Hastings algorithm. It relies on the fact that for points $x_1$ and $x_2$ in the parameter space, $\pi(x_1)/\pi(x_2)$ may still be calculable, though $\pi(x_1)$ and $\pi(x_2)$ are not. This fact is exploited to produce a Markov chain whose steady-state distribution is guaranteed to be $\pi$. 
 
 More and references about history, background, and/or tutorials on monte carlo methods
 
 
 
-One popular method, the Metropolis-Hastings scheme, consists of the following procedure.
+The Metropolis-Hastings scheme consists of the following procedure.
 
 \begin{algorithm}[h]
 \caption{Metropolis-Hastings algorithm}
@@ -91,7 +91,7 @@ Repeat ad nauseum:\\
 Increment $i$\\
 Draw $x$ from a proposal distribution $q(x|x_{i-1})$\\
 Set $\alpha(x_{}|x_{i-1}) = \min(1, \frac{\pi(x)q(x_{i-1}|x)}{\pi(x_{i-1})q(x|x_{i-1})})$\\
-Set $x_i = x$ with probability $\alpha$ and $x_i = x_{i-1}$ as the complementary event.\\
+Set $x_i = x$ with probability $\alpha$ and $x_i = x_{i-1}$ with probability $1 - \alpha$.\\
 \end{algorithm}
 
 Suppose this MCMC algorithm produces a chain $ x_1, x_2, x_3, ...$ of samples. Because the algorithm is stochastic, these samples can be viewed as realizations of random variables $X_1, X_2, X_3, ...$ with marginal density functions $f_1, f_2, f_3, $ etc. Because $X_i$ is independent of past draws given $X_{i-1}$, the conditional distribution $f_{i|i-1}(x_i|x_{i-1})$ contains all the information we need about this method. In particular, to move forward an iteration, we can write $f_i(x_i) = \int f_{i|i-1}(x_{i},x_{i-1})f_{i-1}(x_{i-1})dx_{i-1}$. Noting that $f_{i|i-1}$ doesn't depend on $i$, we can replace it with a function $K$ so that $f_i(x_i) = \int K(x_i, x_{i-1})f_{i-1}(x_{i-1})dx_{i-1}$. This function $K$, called the Markov kernel, is analogous to the transition probability matrices of discrete-space Markov chain theory. We refer to the linear operator of integrating against $K$ as $L$, so that $f_{i} = Lf_{i-1}$. The object of interest is the steady state of this operator, an eigenfunction $\pi$ that has eigenvalue $1$ so that for any $x$, $\pi(x) = (L\pi)(x) = \int K(x, t)\pi(t)dt$. 
@@ -103,14 +103,14 @@ In MCMC methods, chains are usually left to run until the Markov chain converges
 
 \subsubsection{Notation and setup}
 
-We will have two sources of error: discretization from the finite basis and stochasticity from the sample. Objects suffering from discretization error will be labeled with tildes, while objects also suffering from stochasticity will be labeled with hats. There is one exception: we estimate a matrix called $M$, with both error sources present, and it will appear with no hat or tilde.
+In crafting this method, we will have to cope with two sources of error. One is discretization error: we must find a finite representation for the Markov kernel. The other is natural stochasticity from the sampler. Objects suffering only from discretization error will be labeled with tildes, while objects also suffering from stochasticity will be labeled with hats.
 
-Our estimator begins with a fixed set of basis functions $\{h_i\}_1^B$. These might be multivariate normal density functions. We then define some relevant operators and kernels, plus the matrices of coefficient when we expand them in the basis of $h$'s. For an unknown transition kernel $K$, define $\tilde{M}$ to be the matrix that minimizes the squared $\mathcal{L}_2$ distance $\|K - \sum_{i,j}^B\tilde{m}_{ij} h_i \otimes h_j\|^2$, or in other terms the matrix that minimizes the integral $$\int_{\Omega\times\Omega}(K(x,y) - \sum_{i,j}^B\tilde{m}_{ij} h_i(x)h_j(y))^2dx dy .$$ \EMK{Surely this minimum must exist for a quadratic?} Then define $\tilde{K}(x,y) \equiv \sum_{i,j=1}^B \tilde{m}_{ij} h_i(x)h_j(y)$ and define $\tilde{L}$ so that $(\tilde{L}f)(x)$ is $$\int_{\Omega}\tilde{K}(x,y)f(y)dy.$$
+Our estimator begins with a fixed set of basis functions $\{h_i\}_1^B$. These might be multivariate normal density functions. We then define some relevant operators and kernels, plus the matrices of coefficients for when we expand them in the basis of $h$'s. For an unknown transition kernel $K$, define $\tilde{M}$ to be the matrix that minimizes the squared $\mathcal{L}_2$ distance $\|K - \sum_{i,j}^B\tilde{m}_{ij} h_i \otimes h_j\|^2$, or in other terms the matrix that minimizes the integral $$\int_{\Omega\times\Omega}(K(x,y) - \sum_{i,j}^B\tilde{m}_{ij} h_i(x)h_j(y))^2dx dy .$$ \EMK{Surely this minimum must exist for a quadratic?} Then define $\tilde{K}(x,y) \equiv \sum_{i,j=1}^B \tilde{m}_{ij} h_i(x)h_j(y)$ and define $\tilde{L}$ so that $(\tilde{L}f)(x)$ is $$\int_{\Omega}\tilde{K}(x,y)f(y)dy.$$
 
-Later, we will make a noisy estimate of $\tilde{M}$, calling it $M$. The corresponding estimate for $K$ will be 
+Later, we will make a noisy estimate of $\tilde{M}$, calling it $\hat M$. The corresponding estimate for $K$ will be 
 \begin{equation}
 \label{eqn:khatdef}
-\hat{K}(x,y) = \sum_{i,j=1}^B M_{ij} h_i(x)h_j(y).\end{equation}
+\hat{K}(x,y) = \sum_{i,j=1}^B \hat M_{ij} h_i(x)h_j(y).\end{equation}
 
 Similar to before, $\hat{L}$ is defined so that $(\hat{L}f)(x)$ is $$\int_{\Omega}\hat{K}(x,y)f(y)dy.$$
 
@@ -128,21 +128,34 @@ Our approximation can only imitate continuous kernels, i.e. situations where $\i
 
 \subsubsection{A more concrete procedure using a Gaussian basis}
 \label{sec: BEMC_concrete}
-For something more tangible, we will consider $\Omega=\mathbb{R}^D$, using multivariate Gaussian densities as our basis so that when $h_i(x)= (\frac{1}{2\pi \sigma_i^2})^{\frac{D}{2}}\exp(\frac{(x-\mu_i)^2}{\sigma_i^2})$. This makes it easy to draw starting points for the sampler. Also, $C_{ij}$ can be computed as follows.
+For something more tangible, we will consider $\Omega=\mathbb{R}^D$, using multivariate Gaussian densities as our basis so that $h_i(x)= (\frac{1}{(2\pi)^{\frac{D}{2}} |\Sigma_i|^{1/2}})\exp(\frac{-(x-\mu_i)^T\Sigma_i^{-1}(x-\mu_i)}{2})$. This makes it easy to draw starting points for the sampler. Also, $C_{ij}$ can be computed easily using facts about the Normal distribution. Defining $\Lambda \equiv \Sigma_i^{-1} + \Sigma_j^{-1}$ and $\nu = \Lambda^{-1} (\Sigma_i^{-1}\mu_i + \Sigma_j^{-1}\mu_j)$, we have
 
 \EMK{Definitely check this again eventually}
 \begin{align*}
-\int h_i(x)h_j(x)dx &=\int (\frac{1}{2\pi \sigma_i\sigma_j})^{D}\exp(\frac{-(x-\mu_i)^2}{2\sigma_i^2}+\frac{-(x-\mu_j)^2}{2\sigma_j^2})dx\\
-&=\int_{x_1=x_2} (\frac{1}{2\pi \sigma_i\sigma_j})^{D}\exp(-\frac{(x_1-\mu_i)^2}{2\sigma_i^2}+\frac{-(x_2-\mu_j)^2}{2\sigma_j^2})dx_1dx_2\\
-&=\int_{y_1-y_2+\mu_i-\mu_j=0} (\frac{1}{2\pi \sigma_i\sigma_j})^{D}\exp(\frac{-y_1^2}{2\sigma_i^2}+\frac{-y_2^2}{2\sigma_j^2})dy_1dy_2\\
-&=\int_{\sigma_iz_1-\sigma_jz_2+\mu_i-\mu_j=0}
- (\frac{1}{2\pi \sigma_i\sigma_j})^{D}
-\exp(\frac{-z_1^2-z_2^2}{2})(\sigma_i\sigma_j)^D dz_1dz_2\\
-&=\int_{\sigma_iz_1-\sigma_jz_2+\mu_i-\mu_j=0}
- (\frac{1}{2\pi })^{D}
-\exp(\frac{-z_1^2-z_2^2}{2}) dz_1dz_2\\
-&=f_u(0) \text{ if } u=\sigma_iz_1-\sigma_jz_2+\mu_i-\mu_j \text{ and $z$'s are standard normal}\\
-&= (\frac{1}{2\pi (\sigma_i+\sigma_j)^2})^{\frac{D}{2}}\exp(\frac{-(\mu_i-\mu_j)^2}{2\sigma_i^2+2\sigma_j^2})
+\int h_i(x)h_j(x)dx 
+&= \int \frac{1}{(2\pi)^{\frac{D}{2}} |\Sigma_i|^{1/2}}\exp(\frac{-(x-\mu_i)^T\Sigma_i^{-1}(x-\mu_i)}{2})
+\frac{1}{(2\pi)^{\frac{D}{2}} |\Sigma_j|^{1/2}}\exp(\frac{-(x-\mu_j)^T\Sigma_j^{-1}(x-\mu_j)}{2}dx\\
+&= \frac{1}{(2\pi)^{D}\Sigma_i|^{1/2}|\Sigma_j|^{1/2}}\int \exp(\frac{-(x-\mu_i)^T\Sigma_i^{-1}(x-\mu_i)}{2} - \frac{(x-\mu_j)^T\Sigma_j^{-1}(x-\mu_j)}{2}dx\\
+&= \frac{1}{(2\pi)^{D}\Sigma_i|^{1/2}|\Sigma_j|^{1/2}}
+\int \exp \frac{-1}{2} \{
+(x-\mu_i)^T\Sigma_i^{-1}(x-\mu_i) +
+(x-\mu_j)^T\Sigma_j^{-1}(x-\mu_j) \}dx\\
+&= \frac{1}{(2\pi)^{D}\Sigma_i|^{1/2}|\Sigma_j|^{1/2}}
+\int \exp \frac{-1}{2} \{
+x^T(\Sigma_i^{-1} + \Sigma_j^{-1})x 
+- 2x^T(\Sigma_i^{-1}\mu_i + \Sigma_j^{-1}\mu_j)
++ \mu_i^T\Sigma_i^{-1}\mu_i + \mu_j^T\Sigma_j^{-1}\mu_j \}dx\\
+&= \frac{\exp(\frac{-1}{2}\{\mu_i^T\Sigma_i^{-1}\mu_i + \mu_j^T\Sigma_j^{-1}\mu_j\})}{(2\pi)^{D}\Sigma_i|^{1/2}|\Sigma_j|^{1/2}} 
+\int \exp \frac{-1}{2} \{
+x^T\Lambda x 
+- 2x^T(\Sigma_i^{-1}\mu_i + \Sigma_j^{-1}\mu_j)\}dx\\
+&= \frac{\exp(\frac{-1}{2}\{\mu_i^T\Sigma_i^{-1}\mu_i + \mu_j^T\Sigma_j^{-1}\mu_j\})}{(2\pi)^{D}\Sigma_i|^{1/2}|\Sigma_j|^{1/2}} 
+\int \exp \frac{-1}{2} \{x^T\Lambda x - 2x^T\Lambda \nu\}dx\\
+&= \frac{\exp(\frac{-1}{2}\{\mu_i^T\Sigma_i^{-1}\mu_i + \mu_j^T\Sigma_j^{-1}\mu_j\})}{(2\pi)^{D}\Sigma_i|^{1/2}|\Sigma_j|^{1/2}} 
+\int \exp \frac{-1}{2} \{x^T\Lambda x - 2x^T\Lambda \nu + \nu \Lambda \nu - \nu \Lambda \nu\}dx\\
+&= \frac{\exp(\frac{-1}{2}\{\mu_i^T\Sigma_i^{-1}\mu_i + \mu_j^T\Sigma_j^{-1}\mu_j- \nu \Lambda \nu\})}{(2\pi)^{D}\Sigma_i|^{1/2}|\Sigma_j|^{1/2}} 
+\int \exp \frac{-1}{2} \{x^T\Lambda x - 2x^T\Lambda \nu + \nu \Lambda \nu \}dx\\
+&= \frac{\exp(\frac{-1}{2}\{\mu_i^T\Sigma_i^{-1}\mu_i + \mu_j^T\Sigma_j^{-1}\mu_j- \nu \Lambda \nu\})}{(2\pi)^{D}|\Sigma_i|^{1/2}|\Sigma_j|^{1/2}} \frac{(2\pi)^{\frac{D}{2}}}{|\Lambda|^{\frac{1}{2}}}\\
 \end{align*}
 
 \begin{algorithm}[h]
@@ -217,13 +230,15 @@ Return $\sum_i v_i h_i$ as a posterior estimate\\
 \section{Adding basis functions by reversing jumps}
 \label{sec:reverse_jumps}
 
+Especially in a high-dimensional parameter space, it is unreasonable to expect basis functions to be specified a priori: there must be some way to introduce new basis functions as the sampler runs. 
+
 \section{BEMC-R, a variant modeling rejections}
 \label{sec:BEMC-R}
 
 As we mention in section \ref{sec:BEMC}, our scheme is able to model continuous kernels. On the other hand, the Metropolis-Hastings algorithm sometimes rejects proposed samples, and its kernel will assign positive mass to intervals on the ``diagonal'' set $\{(x,y) \in \Omega^2 | x=y\}$. In this section, we introduce a variant of BEMC that explicitly models rejections by the sampler. 
 
 Let us look at the Metropolis-Hastings kernel in more detail. Going back to the algorithm, the quantity $\alpha(x|y)$ is the probability of accepting a move from $y$ to $x$. This is a function of two variables, but for convenience, let us introduce a univariate function $$\alpha(y)=P(\text{accept next move $|$ currently at }y).$$ Splitting up the next draw as an alternative between moving and staying put, we can write $K(x, y) = (1-\alpha(y))\delta_{y}(x) + \alpha(y)f_{acc}(x|y)$. In this expression, $f_{acc}(x|y)$ is the conditional density of $x$ given that our move out of $y$ was not rejected, while $\delta_y(\cdot)$ is a point mass at $y$. %Though it will help in our development, we acknowledge this quantity is strange to consider, because we never observe a rejection or acceptance without also knowing where the proposal was. Certainly, $f_{acc}$ is not the same as $q(x_2|x_1)$, since conditioning on the acceptance increases the chance that we moved into a region of higher probability. 
-To set up the last line below, define the operator $D_{rej}$ from $\alpha$ so that $(D_{rej}f)(x)\equiv (1-\alpha(x))f(x)$, define $K_{acc}(x,y)$ as $f_{acc}(x|y)\alpha(y)$, and let $(L_{acc}f)(x)\equiv \int K_{acc}(x,y)f(y)dy$. The idea behind this notation is that $D_{rej}$ stands for a diagonal operator that describes rejection, and $K_{acc}$ is the Markov kernel but conditioned on acceptance.
+To set up the last line below, define the operator $D_{rej}$ from $\alpha$ so that $(D_{rej}f)(x)\equiv (1-\alpha(x))f(x)$, define $K_{acc}(x,y)$ as $f_{acc}(x|y)\alpha(y)$, and let $(L_{acc}f)(x)\equiv \int K_{acc}(x,y)f(y)dy$. The idea behind this notation is that $D_{rej}$ stands for a diagonal operator that describes rejection, and $K_{acc}$ is like the Markov kernel, but it describes movement conditioning on acceptance.
 
 If $x$ comes right after $y$ in the sampler, we can relate their PDF's with these operators.
 \begin{align*}
@@ -241,9 +256,7 @@ To define another set of ``tilde'' objects, let  $\tilde{M}_{acc}$ be the matrix
 This time around, we will try to estimate a function $\hat{\alpha}$ and a matrix $M$ so that $\hat{\alpha}\approx \tilde{\alpha}$ and $\hat{L}_{acc} \approx \tilde{L}_{acc}$.%, where $(\hat{L}_{acc}f)(x) =\sum_{i,j=1}^B h_i(x)M_{ij}\int h_j(x)f(x)dx$. Even if the parameters were chosen optimally, $L$ may not take the same form as $\hat{L}_{\alpha}+\hat{L}_{M}$, so the estimate $\hat{\pi}$ will not be correct. \EMK{Need some results answering ``in what sense is your method (approximately) correct?''}
  So, we need still need to estimate $M$, but with the added complication of trying to infer $\hat{\alpha}$ at the same time. Fortunately, it is easy to tell when the sampler rejects and when it doesn't, and this provides a way to tease out information about $\alpha$. Suppose for a moment that we start the sampler at a point $y$ and it takes a single step to a value we call $x$. If $x\neq y$, then the sampler has shown less of a tendency to reject starting from $y$, and we label $y$ with a $1$. If $x = y$, we label $y$ with a $0$. Once $\Omega$ is covered in zeroes and ones, there are many probabilistic classifier methods that could give an estimate of $\hat{\alpha}$, which at any given point is just the probability of labeling with a one. Meanwhile, whenever the sampler moves, we gain information about $L_{acc}$, and we can update $M$ as before. 
 
-This strategy still throws away useful information. To see why, recall that the Metropolis-Hastings algorithm makes a proposal, computes an rejection probability, flips a metaphorical coin with that probability, and then discards the rejection probability. When drawing a chain of samples, the rejection probability serves no further purpose, so discarding it is natural. In BEMC-R, though, we can keep it to provide a more efficient estimate of $\alpha$. If the rejection probability when proposing a move to $y$ from $x$ is $p$, then the better procedure is to label $y$ with $p$. Likewise, instead of updating the estimate of $M_{ij}$ using a sample of weight $1$ with probability $p$, we can update it using a sample of weight $p$ with probability 1.
-
-We summarize the procedure in Algorithm \ref{algo:BEMC-R}.
+This strategy still throws away useful information. To see why, recall that the Metropolis-Hastings algorithm makes a proposal, computes an rejection probability, and flips a metaphorical coin with that probability. Then, having rejected or accepted, it discards the rejection probability. When drawing a chain of samples, the rejection probability serves no further purpose, so discarding it is natural. In BEMC-R, though, we can keep it to provide a more efficient estimate of $\alpha$. If the rejection probability when proposing a move to $y$ from $x$ is $p$, then the better procedure is to label $y$ with $p$. Likewise, instead of updating the estimate of $M_{ij}$ using a sample of weight $1$ with probability $p$, we can update it using a sample of weight $p$. We summarize the procedure in Algorithm \ref{algo:BEMC-R}.
 
 \begin{algorithm}[h]
 \caption{BEMC-R algorithm--stage one \label{algo:BEMC-R}}
