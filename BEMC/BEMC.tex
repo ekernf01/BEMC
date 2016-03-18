@@ -119,7 +119,7 @@ Finally, the next few definitions will help describe the interaction of the $h$'
 
 \subsection{The BEMC estimator}
 
-Since $\hat{g}_{ij}$ expands as $$ \int_{\Omega} h_i(x)\left[\sum_{\ell,k} M_{k\ell}h_k(x)\int_{\Omega} h_\ell(y)h_j(y)dy\right]dx= \sum_{\ell,k} M_{k\ell}C_{\ell j}C_{ik},$$ we know that $\hat{G}=CMC$. One nice special case of this formula: for some choices of $\{h_i\}_1^B$, $C$ is the identity matrix and $\hat{G}=M$. We assume $C$ is readily calculable and not too badly conditioned, so that if we can estimate $G$, we can estimate $M$ as $C^{-1}GC^{-1}$. We now focus on $G$, which we approximate via importance sampling. 
+Since $\hat{g}_{ij}$ expands as $$ \int_{\Omega} h_i(x)\left[\sum_{\ell,k} M_{k\ell}h_k(x)\int_{\Omega} h_\ell(y)h_j(y)dy\right]dx= \sum_{\ell,k} M_{k\ell}C_{\ell j}C_{ik},$$ we know that $\hat{G}=C\hat M C$. One nice special case of this formula: for some choices of $\{h_i\}_1^B$, $C$ is the identity matrix and $\hat{G}= \hat M$. We assume $C$ is readily calculable and not too badly conditioned, so that if we can estimate $G$, we can estimate $M$ as $C^{-1}GC^{-1}$. We now focus on $G$, which we approximate via importance sampling. 
 
 If $h_j$ is a valid density function, then by definition, $G$ can be written as an expectation $G_{ij} = E_{Lh_j}[h_i]$. Indeed, if $h_j$ is a valid density function, then $Lh_j$ is a probability distribution, too. What generative process does this distribution describe? It corresponds to initializing the sample from a draw $z\sim h_j$, then running a single step of Metropolis-Hastings. Consequently, even though $L$ is unknown, sampling from $Lh_j$ is straightforward. This motivates us to sample from a normalized version of $Lh_j$ and approximate $G_{ij}$ as an average. All we need to do is sample $z$ from $h_j$, run an M-H iteration on $z$ to get $w$, and retain $w$ as our sample from $Lh_j$. \EMK{Conjecture: the hats converge to the tildes as you run it for longer, and the tildes converge to the truth as you lengthen the basis.}
 
@@ -156,6 +156,7 @@ x^T\Lambda x
 &= \frac{\exp(\frac{-1}{2}\{\mu_i^T\Sigma_i^{-1}\mu_i + \mu_j^T\Sigma_j^{-1}\mu_j- \nu \Lambda \nu\})}{(2\pi)^{D}\Sigma_i|^{1/2}|\Sigma_j|^{1/2}} 
 \int \exp \frac{-1}{2} \{x^T\Lambda x - 2x^T\Lambda \nu + \nu \Lambda \nu \}dx\\
 &= \frac{\exp(\frac{-1}{2}\{\mu_i^T\Sigma_i^{-1}\mu_i + \mu_j^T\Sigma_j^{-1}\mu_j- \nu \Lambda \nu\})}{(2\pi)^{D}|\Sigma_i|^{1/2}|\Sigma_j|^{1/2}} \frac{(2\pi)^{\frac{D}{2}}}{|\Lambda|^{\frac{1}{2}}}\\
+&= \frac{\exp(\frac{-1}{2}\{\mu_i^T\Sigma_i^{-1}\mu_i + \mu_j^T\Sigma_j^{-1}\mu_j- \nu \Lambda \nu\})}{(2\pi)^{D/2}|\Sigma_i|^{1/2}|\Sigma_j|^{1/2}} \frac{1}{|\Lambda|^{\frac{1}{2}}}\\
 \end{align*}
 
 \begin{algorithm}[h]
@@ -198,16 +199,21 @@ We now explain how to get, from our approximation for the kernel, an approximati
 %&=  \sum_{k,j=1}^B h_k(x)(MCMCM)_{kj}\int h_j(y)f(y)dy \\
 %\end{align*}
 
-So, suppose we want a distribution $\hat{\pi}$ with the property $\hat{\pi}=\hat{L}\hat{\pi}$. From the form of $\hat{L}$, we know that $\hat{\pi}\in \text{span}\{h_i|i \in 1...B\}$, so we need only find the vector of coefficients, which we call $v$. As it turns out, $v$ must be an eigenvector of $MC$, which we show below. 
-
+So, suppose we want a distribution $\hat{\pi}$ with the property $\hat{\pi}=\hat{L}\hat{\pi}$. From the form of $\hat{L}$, we know that $\hat{\pi}\in \text{span}\{h_i|i \in 1...B\}$, so we need only find the vector of coefficients, which we call $v$. As it turns out, $v$ must be an eigenvector of $MC$: if $$\hat{\pi}(x) = \sum_{k=1}^Bv_kh_k(x),$$
+then
 \begin{align*}
- \sum_{k=1}^Bv_kh_k(x)&=\hat{\pi}(x) \\
-= (\hat{L}\hat{\pi})(x) &= \int \sum_{i,j=1}^B M_{ij} h_i(x)h_j(y) \sum_{k=1}^Bv_kh_k(y)dy\\
+\sum_{k=1}^Bv_kh_k(x) 
+&= \hat{\pi}(x) \\
+&= (\hat{L}\hat{\pi})(x) \\
+&= \int \sum_{i,j=1}^B M_{ij} h_i(x)h_j(y) \sum_{k=1}^Bv_kh_k(y)dy\\
 &=  \sum_{i,j,k=1}^B M_{ij} h_i(x)v_k\int h_j(y)h_k(y)dy\\
 &=  \sum_{i,j,k=1}^B M_{ij} h_i(x)v_kc_{jk}\\
 &=  \sum_{i,j=1}^B M_{ij} h_i(x)(Cv)_j\\
-&=  \sum_{i=1}^B h_i(x)(MCv)_i\\
+&=  \sum_{i=1}^B h_i(x)(MCv)_i.
 \end{align*}
+
+The fact $v_i = (MCv)_i$ follows from linear independence of the basis elements.
+
 %\EMK{Issues remain in this paragraph. Not convinced I'm getting the eigenvector of the correct matrix.}
 %The matrix $(MC)^{P-1}M$ can be rewritten as $C^{-1/2}(C^{1/2}MC^{1/2})^PC^{-1/2}$, which suggests computing a dominant eigenvector $v'$ for $C^{1/2}MC^{1/2}$ and then getting $v\equiv C^{-1/2} v'$.
 %A natural approximation for the steady state of $K$ is the linear combination of $\{h_i\}_{i=1}^B$ using values of $v$ as coefficients.

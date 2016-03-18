@@ -5,73 +5,165 @@ date: "March 17, 2016"
 output: html_document
 ---
 
+```{r}
+rm(list = ls())
+```
+
 ##Simple BEMC
 
-Code within this document implements a simple version of BEMC.
+Code within this document implements a simple version of BEMC. It supports 
+
+- only parameter spaces equal to $\mathbb{R}^D$
+- only MVN basis functions
+- only one dimension right now
+
+The basic data structure throughout the implementation is a basis: a list of multivariate Gaussians with means, covariances, Cholesky factors, precisions, pairwise $L_2$ inner products of basis functions, matrices describing the action of the M-H sampler, and coefficients of the estimated target density.
+
+```{r}
+prepare_basis = function(dimension = 1, NUM_BASIS = 10){
+  assertthat::assert_that(dimension==1) #Don't have a default initialization yet
+  basis = list(means       = as.list(seq(-5, 5, length.out = NUM_BASIS)), 
+               covariances = as.list(rep(1,  length.out = NUM_BASIS)))
+  basis$cholesky_factors = lapply(FUN = chol,                           basis$covariances)
+  basis$inv_sqrt_det =     lapply(FUN = function(M)(1 / prod(diag(M))), basis$cholesky_factors)
+  basis$precisions =       lapply(FUN = chol2inv,                       basis$cholesky_factors)
+  basis$inner_prods_hh  = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS) #Called C in the writeup
+  basis$inner_prods_hLh = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS) #Called G in the writeup
+  basis$sampler_action  = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS) #CinvG = MC
+  basis$target_coeffs = rep(NA, NUM_BASIS)
+  
+  basis$length = NUM_BASIS
+  basis$par_dim = dimension
+    
+  get_inner_prod = function(i, j){
+    lambda = basis$precisions[[i]] + basis$precisions[[j]]
+    nu = solve(lambda, 
+               basis$precisions[[i]] %*% basis$means[[i]] + 
+               basis$precisions[[j]] %*% basis$means[[j]])
+    num = exp(-0.5 * ( - nu * lambda * nu + 
+                      t(basis$means[[i]]) %*% basis$precisions[[i]] %*% basis$means[[i]] + 
+                      t(basis$means[[j]]) %*% basis$precisions[[j]] %*% basis$means[[j]] ) )
+    num = num * basis$inv_sqrt_det[[i]] * basis$inv_sqrt_det[[j]]
+    dnm = sqrt(2*pi)^dimension * sqrt(det(lambda))
+    return(num / dnm)
+  }
+  for(b_in in 1:NUM_BASIS){
+    for(b_out in 1:NUM_BASIS){
+      basis$inner_prods_hh[b_in, b_out] = get_inner_prod(b_in, b_out)
+    }
+  }
+  return(basis)
+}
+
+# Return a matrix with `num_samples` columns. Each is a draw from 
+# element `index` of `basis`.
+get_samples = function(basis, index, num_samples){
+  my_chol = basis$cholesky_factors[[index]]
+  samples = matrix(rnorm(n = num_samples * basis$par_dim), nrow = basis$par_dim)
+  samples = my_chol %*% samples
+  for(i in 1:basis$par_dim){
+    samples[i,] = samples[i,] + basis$means[[index]][i]
+  }
+  return(samples)
+}
+
+# Accept a matrix with `num_samples` columns. 
+# At each, evaluate the density of
+# element `index` of `basis`.
+get_density = function(points, basis, index){
+  nums = rep(NA, dim(points)[2])
+  for(j in seq_along(nums)){
+    points[ ,j] = points[ ,j] - basis$means[[index]]
+    quadratic_j = t(points[ ,j]) %*% basis$precisions[[index]] %*% points[ ,j]
+    nums[j] = exp(-0.5 * quadratic_j )
+  }
+  inv_dnm = basis$inv_sqrt_det[[index]] * ( (2 * pi) ^ ( -basis$par_dim / 2 ) ) 
+  densities = nums * inv_dnm
+  return(densities)
+}
+
+# Accept a matrix with `num_samples` columns. 
+# At each, evaluate the estimated density of the target.
+target_density_est = function(points, basis){
+  densities = rep(0, dim(points)[2])
+  for(i in 1:basis$length){
+    densities = densities + 
+      basis$target_coeffs[[i]] * get_density(points, basis, index = i)
+  }
+  return(densities)
+}
+```
+
+A little bit of testing code: we should get the same results by histogramming samples and plotting densities.
+
+```{r}
+basis = prepare_basis(NUM_BASIS = 10)
+samples = get_samples(basis, index = 1, num_samples = 5000)
+densities = get_density(samples, basis, index = 1)
+hist(samples, probability = TRUE)
+my_order = order(samples)
+lines(samples[my_order], densities[my_order])
+```
+
+The basic algorithm: estimate inner products $\langle h_j, Lh_i \rangle$ where $h_i, h_j$ are masis elements and $L$ is the action of the sampler. Divide out appropriately by $\langle h_j, h_i \rangle$, and get the target as a top eigenvector.
+
+```{r}
+# sampler: a function taking a vector `points_in` of parameter values
+#          and returning a vector of outputs from an MH sampler initialized at points_in.
+bemc = function(sampler, dimension = 1, NUM_SAMPLES = 10000){
+  
+  basis = prepare_basis(dimension)
+  
+  #Estimate M
+  samples_before_mh = matrix(0, ncol = NUM_SAMPLES, nrow = dimension)
+  samples_after_mh = matrix(0, ncol = NUM_SAMPLES, nrow = dimension)
+  for(b_in in 1:basis$length){
+    samples_before_mh = get_samples(basis, b_in, num_samples = NUM_SAMPLES)
+    for(b_out in 1:basis$length){
+      samples_after_mh = simple_sampler(points_in = samples_before_mh)
+      weights = get_density(points = samples_after_mh, basis, b_out)
+      basis$inner_prods_hLh[b_in, b_out] = mean(weights)
+    }    
+  }
+  cinv = ginv(basis$inner_prods_hh)
+  basis$sampler_action = cinv %*% basis$inner_prods_hLh 
+  basis$target_coeffs = Re(eigen(basis$sampler_action)$vectors[,1])
+  basis$target_coeffs = basis$target_coeffs / sum(basis$target_coeffs)
+  return(basis)
+}
+```
 
 ####A simple M-H sampler for fodder
 
 This uses MH with a symmetric Gaussian proposal to generate draws from a Gamma(2, 2) target. It tests the results by plotting them against the true density.
 
 ```{r}
-unit_gaussian = function(x)(rnorm(n = 1, sd = 1, mean = x))
-my_target = function(x)(dgamma(x, shape = 2, rate = 2))
-simple_sampler = function(points_in, 
-                          proposal = unit_gaussian, 
-                          target = my_target){
-  points_out = proposal(points_in)
+target = function(x)(dt(x, df = 5))
+simple_sampler = function(points_in){
+  points_out = points_in + rnorm(n = prod(dim(points_in)))
+
   #it's a symmetric proposal, so only the target enters this ratio.
-  accepts = rbinom(size = 1, n = length(points_out), 
+  accepts = rbinom(size = 1, n = dim(points_out)[2], 
                    prob = pmin(1, target(points_out) / target(points_in)))
-  points_out[!accepts] = points_in[!accepts]
+  points_out[,!accepts] = points_in[,!accepts]
   return(points_out)
 }
 
 CHAINLEN = 1e5
-x = rep(1, CHAINLEN)
+x = rep(list(matrix(1, ncol = 1, nrow = 1)), CHAINLEN)
 for(i in 2:CHAINLEN){
-  x[i] = simple_sampler(x[i-1])
+  x[[i]] = simple_sampler(x[[i-1]])
 }
-hist(x, probability = TRUE, breaks = 100)
-lines(sort(x), my_target(sort(x)))
+x = as.numeric(x)
+hist(x, probability = TRUE, breaks = 50)
+lines(sort(x), target(sort(x)))
 ```
 
-####BEMC code
-
+This chunk calls BEMC and plots the results against the ground truth.
 
 ```{r}
-
-# sampler: a function taking a vector `points_in` of parameter values
-#          and returning a vector of outputs from an MH sampler initialized at points_in.
-# initvals: This gives the basis functions. 
-#           Should be a list with elements `$means` and `$covariances`. 
-NUM_BASIS = 100
-NUM_SAMPLES = 100
-bemc = function(sampler, initvals = list(means       = list(seq(0, 3, length.out = NUM_BASIS)), 
-                                         covariances = list(rep(0.1,  length.out = NUM_BASIS)))){
-  
-  #Estimate M
-  M = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS)
-  samples_before_mh = rep(0, NUM_SAMPLES)
-  samples_after_mh = rep(0, NUM_SAMPLES)
-  for(b_in in 1:NUM_BASIS){
-    samples_before_mh = rnorm(n = NUM_SAMPLES, mean = initvals$means[b_in],
-                              sd = sqrt(initvals$covariances[b_in])
-    for(b_out in 1:NUM_BASIS){
-      samples_after_mh = simple_sampler(points_in = samples_before_mh)
-      weights = dnorm(x = samples_after_mh,
-                      mean = initvals$means[b_out],
-                      sd = sqrt(initvals$covariances[b_out]))
-      M[b_in, b_out] = mean(weights)
-    }    
-  }
-  
-  #Get C
-  C = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS)
-  for(b_in in 1:NUM_BASIS){
-    for(b_out in 1:NUM_BASIS){
-      C[b_in, b_out] = 
-    }
-  }
-}
+basis = bemc(sampler = simple_sampler, dimension = 1, NUM_SAMPLES = 10000)
+my_grid = matrix(seq(-5, 5, length.out = 100), ncol = 100)
+plot(my_grid, target(my_grid))
+lines(my_grid, target_density_est(points = my_grid, basis))
 ```
