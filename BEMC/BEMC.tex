@@ -77,7 +77,7 @@ We introduce Basis Expansion Monte Carlo, which studies a Gibbs or Metropolis-Ha
 \section{Introduction}
 In Bayesian modeling, it is impossible to find a closed form for the posteror distribution of interest $\pi$. One work-around, originating in computational physics, is the Metropolis-Hastings algorithm. It relies on the fact that for points $x_1$ and $x_2$ in the parameter space, $\pi(x_1)/\pi(x_2)$ may still be calculable, though $\pi(x_1)$ and $\pi(x_2)$ are not. This fact is exploited to produce a Markov chain whose steady-state distribution is guaranteed to be $\pi$. 
 
-More and references about history, background, and/or tutorials on monte carlo methods
+More and references about history, background, and/or introductions to monte carlo methods
 
 
 
@@ -233,10 +233,15 @@ Return $\sum_i v_i h_i$ as a posterior estimate\\
 %\label{sec:BEMC-G}
 %This approximation can also be adapted to Gibbs sampling, a ubiquitous MCMC variant. 
 
-\section{Adding basis functions by reversing jumps}
+\section{Adding basis functions}
 \label{sec:reverse_jumps}
 
-Especially in a high-dimensional parameter space, it is unreasonable to expect basis functions to be specified a priori: there must be some way to introduce new basis functions as the sampler runs. 
+Especially in a high-dimensional parameter space, it is unreasonable to expect basis functions to be specified a priori: there must be some way to introduce new basis functions as the sampler runs. So we AAAARGHHH DON'T KNOW YET
+
+\section{Running BEMC in O(B) time}
+\label{sec:linear_time}
+
+Estimating every single element of $\hat G$ is wasteful. Some basis functions are far from one another, and their values of $\langle h_i, Lh_j \rangle$ will be near zero. To take advantage of this, we maintain a list for each basis function of the nearest neighbors, and we only estimate $\langle h_i, Lh_j \rangle$ for neighbors. The remaining entries of $\hat G$ are set to $0$. 
 
 \section{BEMC-R, a variant modeling rejections}
 \label{sec:BEMC-R}
@@ -332,8 +337,17 @@ Setting its gradient to zero yields $Q=C^{-1}D^T$ because
 
 Since we now know we can apply $ P_{\text{span}\{h_i\}}$ by calculating $C^{-1}D^Tv$, we can express the entire process as a matrix multiplication with just one more definition. Let $A$ have $A_{kj}=1$ if for some $\ell$, $k=\tau(\ell, j)$ and $A_{kj}=0$ otherwise. Then by our definition, the coefficients for $\hat{\pi}$ in terms of $\{h_i\}$ come from the eigenvector $w = (C^{-1}D^TA + MC)w$.
 
+
+\subsection{Estimator properties}
+\label{sec:properties}
+
+Prove $E[\hat G] = \tilde G$?
+
+Our estimator $w$ is an eigenvector; thus, it satisfies the estimating equation $(X - I)v = 0$ for some $X$. Its asymptotic variance is 
+$$(X - I)^{-1}\mathrm{Var}[(X - I)v](X - I)^{-1T}$$
+
 \subsection{A concrete choice of basis for BEMC-R}
-\label{sec: BEMC-R_concrete}
+\label{sec:BEMC-R_concrete}
 
 We can implement this rejection-tolerant version on $\mathbb{R}^D$ using a list of Gaussians for $\{h_i\}_{i=1}^B$ like we do in section \ref{sec: BEMC_concrete}. In selecting $\{\phi_i\}_{i=1}^{B_\phi}$, we want to make it easy to compute inner products of the form $\int \phi_k(x)h_i(x)dx$. We also want something appropriate to express $\alpha$ as it occurs naturally. These requirement suggest using constants and Gaussians, but on top of that, we suggest one additional change. If $\Phi$ is the cumulative distribution function of the standard normal, and $f_D(\cdot|\mu, \Sigma)$ is a normal density on $R^D$, then for any pair of our basis functions, $\int \Phi(\theta ^T x)h_i(x)h_j(x)dx$ will still be tractable. This is worth the added complexity because probits, regularly used in situations with binary response and continuous predictors, will capture $\alpha$ more easily. 
 
