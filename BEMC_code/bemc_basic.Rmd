@@ -36,6 +36,7 @@ prepare_basis = function(dimension = 1,
   basis$inner_prods_hh  = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS) #Called C in the writeup
   basis$inner_prods_hLh = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS) #Called G in the writeup
   basis$sampler_action  = matrix(NA, nrow = NUM_BASIS, ncol = NUM_BASIS) #CinvG = MC
+  basis$neighbor_mat    = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS) #Z
   basis$target_coeffs = rep(NA, NUM_BASIS)
   basis$length = NUM_BASIS
   basis$par_dim = dimension
@@ -62,12 +63,25 @@ prepare_basis = function(dimension = 1,
   }
   
   # We only estimate traffic between nearby basis elements.
-  # This code find the 4 nearest neighbors for each element.
+  # This code finds the nearest neighbors for each element.
   basis$neighbors = as.list(rep(0, NUM_BASIS))
   for(index in 1:NUM_BASIS){
     basis$neighbors[[index]] = order(basis$inner_prods_hh[index, ], 
                                      decreasing = TRUE)[1:num_neighbors]
   }
+  #Ensure that neighboring relations are symmetric
+  for(b_in in 1:NUM_BASIS){
+    for(b_out in basis$neighbors[[b_in]]){
+      if(! (b_in %in% basis$neighbors[[b_out]]) ){
+        basis$neighbors[[b_out]] = c(basis$neighbors[[b_out]], b_in)
+      }
+    }
+  }
+  for(index in 1:NUM_BASIS){
+    basis$neighbor_mat[ basis$neighbors[[index]], index ] = 1
+  }
+  assertthat::assert_that( all( basis$neighbor_mat == t( basis$neighbor_mat ) ) )
+
   return(basis)
 }
 
@@ -148,8 +162,7 @@ require(MASS)
 # sampler: a function taking a vector `points_in` of parameter values
 #          and returning a vector of outputs from an MH sampler initialized at points_in.
 bemc = function(basis, sampler, dimension = 1, NUM_SAMPLES = 10000){
-  diag_shrink = 0
-  
+
   #Estimate M
   samples_before_mh = matrix(0, ncol = NUM_SAMPLES, nrow = dimension)
   samples_after_mh = matrix(0, ncol = NUM_SAMPLES, nrow = dimension)
@@ -162,9 +175,11 @@ bemc = function(basis, sampler, dimension = 1, NUM_SAMPLES = 10000){
     }    
   }
   cinv = ginv(basis$inner_prods_hh)
-  basis$sampler_action = cinv %*% basis$inner_prods_hLh 
-  basis$sampler_action = basis$sampler_action -
-    diag_shrink * diag(diag(basis$sampler_action))
+  basis$sampler_action = #Cinv ZGZ#
+    cinv %*% 
+    basis$neighbor_mat %*% 
+    basis$inner_prods_hLh %*%  
+    basis$neighbor_mat
   basis$target_coeffs = Re(eigen(basis$sampler_action)$vectors[,1])
   basis$target_coeffs = basis$target_coeffs / sum(basis$target_coeffs)
   return(basis)
@@ -217,5 +232,5 @@ heatmap(basis$sampler_action, Rowv = NA, Colv = NA, symm = TRUE)
 heatmap(basis$inner_prods_hLh, Rowv = NA, Colv = NA, symm = TRUE)
 plot(basis$means, diag(basis$sampler_action))
 lines(my_grid, target(my_grid))
-plot(basis$target_coeffs)
+plot(basis$means, basis$target_coeffs)
 ```

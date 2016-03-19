@@ -241,7 +241,25 @@ Especially in a high-dimensional parameter space, it is unreasonable to expect b
 \section{Running BEMC in O(B) time}
 \label{sec:linear_time}
 
-Estimating every single element of $\hat G$ is wasteful. Some basis functions are far from one another, and their values of $\langle h_i, Lh_j \rangle$ will be near zero. To take advantage of this, we maintain a list for each basis function of the nearest neighbors, and we only estimate $\langle h_i, Lh_j \rangle$ for neighbors. The remaining entries of $\hat G$ are set to $0$. 
+Estimating every single element of $\hat G$ is wasteful. Some basis functions are far from one another, and their values of $\langle h_i, Lh_j \rangle$ will be near zero. To take advantage of this, we maintain a list for each basis function of the five nearest neighbors, and we only estimate $\langle h_i, Lh_j \rangle$ for neighbors. (We also fill in additional entries so that the ``neighbors'' relation is symmetric.) This leaves us with an incomplete matrix $\hat G$. 
+
+Fortunately, we do not need the full matrix $C^{-1}\hat G$, only its leading eigenvector. To deal with the missing entries, we can cast this as an optimization problem and omit unknown terms of the penalty. In the quadratic-time scheme, our coefficients play the role of $v$ in
+\begin{align}
+\mathrm{argmin}_{v, w}||vw^T - C^{-1}\hat G||_2^2 
+&= \mathrm{argmin}_{v, w}
+\mathrm{Tr}((vw^T - C^{-1}\hat G) (wv^T - \hat G^TC^{-1T}))\\
+&= \mathrm{argmin}_{v, w}
+\mathrm{Tr}(vw^Twv^T) - 2\mathrm{Tr}(C^{-1}\hat Gwv^T) + \mathrm{Tr}(C^{-1}\hat G\hat G^TC^{-1T})\\
+&= \mathrm{argmin}_{v, w}
+v^Tvw^Tw - 2\mathrm{Tr}(\hat Gwv^TC^{-1})\\
+\end{align}
+
+A simple extension for missing entries is to instead solve
+ 
+$$\mathrm{argmin}_{v, w}v^Tvw^Tw - 2\mathrm{Tr}(Z\hat GZwv^TC^{-1}),$$
+
+where $Z_{ij}$ is $0$ unless $h_i$ and $h_j$ are neighbors. This is equivalent to finding the leading eigenvector of the matrix $C^{-1}Z\hat GZ$.
+
 
 \section{BEMC-R, a variant modeling rejections}
 \label{sec:BEMC-R}
