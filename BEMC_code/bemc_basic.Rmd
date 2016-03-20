@@ -20,25 +20,56 @@ Code within this document implements a simple version of BEMC. It supports
 The basic data structure throughout the implementation is a basis: a list of multivariate Gaussians with means, covariances, Cholesky factors, precisions, pairwise $L_2$ inner products of basis functions, matrices describing the action of the M-H sampler, and coefficients of the estimated target density.
 
 ```{r}
+init_single_scale_basis = function(range, num_elements, tightness = 2){  
+  default_var = ((range[2] - range[1]) / (tightness * num_elements))^2
+  basis = list(means       = as.list(ppoints(num_elements) * (range[2] - range[1]) + range[1]), 
+               covariances = as.list(rep(default_var,       length.out = num_elements)))
+  basis$length = num_elements
+  return(basis)
+}
+
+concat_basis_skeletons = function(skeleton_list){
+  basis = list(means = list(), covariances = list(), length = 0)
+  for(bi in skeleton_list){
+    basis$means       = append(basis$means,       bi$means)
+    basis$covariances = append(basis$covariances, bi$covariances)
+    basis$length = basis$length + bi$length
+  }
+  return(basis)
+}
+
+init_multiscale_basis = function(range, num_layers){
+  bases = list()
+  for(i in 1:num_layers){
+    bases = append(bases, list( init_single_scale_basis( range, num_elements = 2^(i-1) ) ) )
+  }
+  basis = concat_basis_skeletons(bases)
+  return(basis)
+}
+
 prepare_basis = function(dimension = 1, 
-                         NUM_BASIS = 50, 
+                         num_elements = 50, 
                          range = c(-5, 5), 
-                         scale = 2,
-                         num_neighbors = 5){
+                         num_neighbors = 5,
+                         multiscale = FALSE,
+                         num_layers = 5){
   assertthat::assert_that(dimension==1) #Don't have a default initialization yet
-  default_var = ((range[2] - range[1]) / (scale * NUM_BASIS))^2
-  basis = list(means       = as.list(seq(range[1], range[2],length.out = NUM_BASIS)), 
-               covariances = as.list(rep(default_var,       length.out = NUM_BASIS)))
-  basis$range = range
+  if(multiscale){
+    warning("Constructing multiscale basis. Ignoring num_elements argument")
+    basis = init_multiscale_basis(range, num_layers)
+  } else {
+    warning("Constructing single scale basis. Ignoring num_layers argument")
+    basis = init_single_scale_basis(range, num_elements)
+  }
+  
   basis$cholesky_factors = lapply(FUN = chol,                           basis$covariances)
   basis$inv_sqrt_det =     lapply(FUN = function(M)(1 / prod(diag(M))), basis$cholesky_factors)
   basis$precisions =       lapply(FUN = chol2inv,                       basis$cholesky_factors)
-  basis$inner_prods_hh  = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS) #Called C in the writeup
-  basis$inner_prods_hLh = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS) #Called G in the writeup
-  basis$sampler_action  = matrix(NA, nrow = NUM_BASIS, ncol = NUM_BASIS) #CinvG = MC
-  basis$neighbor_mat    = matrix(0, nrow = NUM_BASIS, ncol = NUM_BASIS) #Z
-  basis$target_coeffs = rep(NA, NUM_BASIS)
-  basis$length = NUM_BASIS
+  basis$inner_prods_hh  = matrix(0,  nrow = basis$length, ncol = basis$length) #Called C in the writeup
+  basis$inner_prods_hLh = matrix(0,  nrow = basis$length, ncol = basis$length) #Called G in the writeup
+  basis$sampler_action  = matrix(NA, nrow = basis$length, ncol = basis$length) #CinvG = MC
+  basis$neighbor_mat    = matrix(0,  nrow = basis$length, ncol = basis$length) #Z
+  basis$target_coeffs = rep(NA, basis$length)
   basis$par_dim = dimension
 
     
@@ -56,28 +87,28 @@ prepare_basis = function(dimension = 1,
   }
   
   #Get inner products
-  for(b_in in 1:NUM_BASIS){
-    for(b_out in 1:NUM_BASIS){
+  for(b_in in 1:basis$length){
+    for(b_out in 1:basis$length){
       basis$inner_prods_hh[b_in, b_out] = get_inner_prod(b_in, b_out)
     }
   }
   
   # We only estimate traffic between nearby basis elements.
   # This code finds the nearest neighbors for each element.
-  basis$neighbors = as.list(rep(0, NUM_BASIS))
-  for(index in 1:NUM_BASIS){
+  basis$neighbors = as.list(rep(0, basis$length))
+  for(index in 1:basis$length){
     basis$neighbors[[index]] = order(basis$inner_prods_hh[index, ], 
                                      decreasing = TRUE)[1:num_neighbors]
   }
   #Ensure that neighboring relations are symmetric
-  for(b_in in 1:NUM_BASIS){
+  for(b_in in 1:basis$length){
     for(b_out in basis$neighbors[[b_in]]){
       if(! (b_in %in% basis$neighbors[[b_out]]) ){
         basis$neighbors[[b_out]] = c(basis$neighbors[[b_out]], b_in)
       }
     }
   }
-  for(index in 1:NUM_BASIS){
+  for(index in 1:basis$length){
     basis$neighbor_mat[ basis$neighbors[[index]], index ] = 1
   }
   assertthat::assert_that( all( basis$neighbor_mat == t( basis$neighbor_mat ) ) )
@@ -146,7 +177,7 @@ plot_1d_basis = function(basis){
 A little bit of testing code. To test the sampler and the density calculations, we should get the same results by histogramming samples and plotting densities.
 
 ```{r}
-basis = prepare_basis(NUM_BASIS = 10)
+basis = prepare_basis(num_layers = 3)
 plot_1d_basis(basis)
 samples = get_samples(basis, index = 1, num_samples = 50000)
 densities = get_density(samples, basis, index = 1)
@@ -155,7 +186,7 @@ my_order = order(samples)
 lines(samples[my_order], densities[my_order])
 ```
 
-The basic algorithm: estimate inner products $\langle h_j, Lh_i \rangle$ where $h_i, h_j$ are masis elements and $L$ is the action of the sampler. Divide out appropriately by $\langle h_j, h_i \rangle$, and get the target as a top eigenvector.
+The basic algorithm: estimate inner products $\langle h_j, Lh_i \rangle$ where $h_i, h_j$ are masis elements and $L$ is the action of the sampler. Divide out appropriately by $\langle h_j, h_i \rangle$, and get the target as a top eigenvector. The missing entries mean we actually solve a slightly different eigenproblem.
 
 ```{r}
 require(MASS)
@@ -174,12 +205,16 @@ bemc = function(basis, sampler, dimension = 1, NUM_SAMPLES = 10000){
       basis$inner_prods_hLh[b_in, b_out] = mean(weights)
     }    
   }
-  cinv = ginv(basis$inner_prods_hh)
+  cinv = ginv(basis$inner_prods_hh, tol = 0.01)
+  basis$raw_sampler_action = #Cinv G#
+    cinv %*% 
+    basis$inner_prods_hLh 
   basis$sampler_action = #Cinv ZGZ#
     cinv %*% 
     basis$neighbor_mat %*% 
     basis$inner_prods_hLh %*%  
     basis$neighbor_mat
+  
   basis$target_coeffs = Re(eigen(basis$sampler_action)$vectors[,1])
   basis$target_coeffs = basis$target_coeffs / sum(basis$target_coeffs)
   return(basis)
@@ -218,19 +253,19 @@ lines(sort(x), target(sort(x)))
 This chunk calls BEMC and plots the results against the ground truth.
 
 ```{r, cache = TRUE}
-basis = prepare_basis(dimension = 1, NUM_BASIS = 30)
+require(gplots)
+basis = prepare_basis(dimension = 1, num_elements = 30, num_neighbors = 5)
 plot_1d_basis(basis)
-heatmap(basis$inner_prods_hh, Rowv = NA, Colv = NA)
+image(basis$inner_prods_hh, 
+      main = paste("Cond. number:", round(kappa(basis$inner_prods_hh))))
 basis = bemc(basis, 
              sampler = simple_sampler, 
              dimension = 1, 
-             NUM_SAMPLES = 5000)
+             NUM_SAMPLES = 100)
 my_grid = matrix(seq(-5, 5, length.out = 100), ncol = 100)
-plot(my_grid, target(my_grid))
-lines(my_grid, target_density_est(points = my_grid, basis))
-heatmap(basis$sampler_action, Rowv = NA, Colv = NA, symm = TRUE)
-heatmap(basis$inner_prods_hLh, Rowv = NA, Colv = NA, symm = TRUE)
-plot(basis$means, diag(basis$sampler_action))
-lines(my_grid, target(my_grid))
-plot(basis$means, basis$target_coeffs)
+image(basis$inner_prods_hLh)
+image(basis$sampler_action)
+plot(my_grid, target(my_grid), type = "l")
+lines(my_grid, target_density_est(points = my_grid, basis), col = "red")
+
 ```

@@ -361,8 +361,9 @@ Since we now know we can apply $ P_{\text{span}\{h_i\}}$ by calculating $C^{-1}D
 
 Prove $E[\hat G] = \tilde G$?
 
-Our estimator $w$ is an eigenvector; thus, it satisfies the estimating equation $(X - I)v = 0$ for some $X$. Its asymptotic variance is 
-$$(X - I)^{-1}\mathrm{Var}[(X - I)v](X - I)^{-1T}$$
+It is shown in \cite{bacharoglou2010approximation} that any continuous and compactly-supported probability density on $\mathbb{R}^D$ can be approximated arbitrarily well by a finite mixture of Gaussians. 
+
+Consider a random variable $X$ drawn from the target density $\pi$, and consider a random variable $Y$ obtained by applyng a single iteration of Metropolis-Hastings to $X$. $Y$ has marginal density $\pi$. The object of inference in BEMC, $K$, equals the density of $Y|X$. 
 
 \subsection{A concrete choice of basis for BEMC-R}
 \label{sec:BEMC-R_concrete}
