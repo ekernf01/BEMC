@@ -51,8 +51,10 @@ prepare_basis = function(dimension = 1,
                          num_elements = 50, 
                          range = c(-5, 5), 
                          num_neighbors = 5,
+                         neighbor_choice = "closest",
                          multiscale = FALSE,
                          num_layers = 5){
+  assertthat::assert_that(neighbor_choice %in% c("closest", "random"))
   assertthat::assert_that(dimension==1) #Don't have a default initialization yet
   if(multiscale){
     warning("Constructing multiscale basis. Ignoring num_elements argument")
@@ -97,8 +99,13 @@ prepare_basis = function(dimension = 1,
   # This code finds the nearest neighbors for each element.
   basis$neighbors = as.list(rep(0, basis$length))
   for(index in 1:basis$length){
-    basis$neighbors[[index]] = order(basis$inner_prods_hh[index, ], 
-                                     decreasing = TRUE)[1:num_neighbors]
+    if(neighbor_choice=="closest"){
+      basis$neighbors[[index]] = order(basis$inner_prods_hh[index, ], 
+                                       decreasing = TRUE)[1:num_neighbors]
+    } 
+    if(neighbor_choice=="random"){
+      basis$neighbors[[index]] = sample(1:basis$length, num_neighbors)
+    }
   }
   #Ensure that neighboring relations are symmetric
   for(b_in in 1:basis$length){
@@ -254,7 +261,8 @@ This chunk calls BEMC and plots the results against the ground truth.
 
 ```{r, cache = TRUE}
 require(gplots)
-basis = prepare_basis(dimension = 1, num_elements = 30, num_neighbors = 5)
+basis = prepare_basis(dimension = 1, num_elements = 30, 
+                      num_neighbors = 5, neighbor_choice = "closest")
 plot_1d_basis(basis)
 image(basis$inner_prods_hh, 
       main = paste("Cond. number:", round(kappa(basis$inner_prods_hh))))
@@ -265,6 +273,7 @@ basis = bemc(basis,
 my_grid = matrix(seq(-5, 5, length.out = 100), ncol = 100)
 image(basis$inner_prods_hLh)
 image(basis$sampler_action)
+plot(basis$means, basis$target_coeffs)
 plot(my_grid, target(my_grid), type = "l")
 lines(my_grid, target_density_est(points = my_grid, basis), col = "red")
 
